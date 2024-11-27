@@ -221,5 +221,149 @@ module thinpad_top (
       .data_enable(video_de)
   );
   /* =========== Demo code end =========== */
+  logic        wbm_cyc_o;
+  logic        wbm_stb_o;
+  logic        wbm_ack_i;
+  logic [31:0] wbm_adr_o;
+  logic [31:0] wbm_dat_o;
+  logic [31:0] wbm_dat_i;
+  logic [ 3:0] wbm_sel_o;
+  logic        wbm_we_o;
 
+  reg [31:0] pc_reg;
+  reg [31:0] pc_reg_next;
+  reg [31:0] inst_reg;
+  logic [31:0] imm;
+  reg [6:0] opcode;
+  reg [2:0] funct;
+
+  reg [31:0]oprand1_reg;
+  reg [31:0]oprand2_reg;
+  reg [4:0]rd_reg;
+  
+
+  logic [4:0] rf_waddr;
+  logic [31:0] rf_wdata;
+  logic rf_we;
+  logic [4:0] rf_raddr_a;
+  logic [31:0] rf_rdata_a;
+  logic [4:0] rf_raddr_b;
+  logic [31:0] rf_rdata_b;
+
+  logic [31:0] alu_a;
+  logic [31:0] alu_b;
+  logic [3:0] alu_op;
+  logic [31:0] alu_y;
+  
+  ALU_32 alu_32(
+    .a(alu_a),
+    .b(alu_b),
+    .op(alu_op),
+    .y(alu_y)
+  );
+
+  RegFile_32 rf_32(
+    .waddr(rf_waddr),
+    .wdata(rf_wdata),
+    .we(rf_we),
+    .raddr_a(rf_raddr_a),
+    .rdata_a(rf_rdata_a),
+    .raddr_b(rf_raddr_b),
+    .rdata_b(rf_rdata_b),
+    .clk(sys_clk)
+  );
+
+  IF_module if_module(
+    .clk(sys_clk),
+    .reset(reset_btn),
+    .pc_reg(pc_reg),
+    .inst_reg(inst_reg),
+    .pc_next_reg(pc_reg_next),
+    .wb_cyc_o(wbm_cyc_o),
+    .wb_stb_o(wbm_stb_o),
+    .wb_ack_i(wbm_ack_i),
+    .wb_adr_o(wbm_adr_o),
+    .wb_dat_o(wbm_dat_o),
+    .wb_dat_i(wbm_dat_i),
+    .wb_sel_o(wbm_sel_o),
+    .wb_we_o(wbm_we_o)
+  );
+  IF_ID_REG_module if_id_reg_module(
+    .clk(sys_clk),
+    .reset(reset_btn),
+    .inst_reg_i(inst_reg),
+    .inst_reg_o(inst_reg)
+  );
+  ID_module id_module(
+    .reset(reset_btn),
+    .inst_reg(inst_reg),
+    .rf_raddr_a(rf_raddr_a),
+    .rf_raddr_b(rf_raddr_b),
+    .rd_reg(rd_reg),
+    .opcode(opcode),
+    .funct(funct),
+    .imm(imm),
+    .oprand1_reg(oprand1_reg),
+    .oprand2_reg(oprand2_reg)
+  );
+  ID_EXE_REG_module id_exe_reg_module(
+    .clk(sys_clk),
+    .reset(reset_btn),
+    .rd_reg_i(rd_reg),
+    .opcode_i(opcode),
+    .funct_i(funct),
+    .imm_i(imm),
+    .oprand1_reg_i(oprand1_reg),
+    .oprand2_reg_i(oprand2_reg),
+    .rd_reg_o(rd_reg),
+    .opcode_o(opcode),
+    .funct_o(funct),
+    .imm_o(imm),
+    .oprand1_reg_o(oprand1_reg),
+    .oprand2_reg_o(oprand2_reg)
+  )
+  EXE_module exe_module(
+    .reset(reset_btn),
+    .inst_reg(inst_reg),
+    .oprand1_reg(oprand1_reg),
+    .oprand2_reg(oprand2_reg),
+    .opcode(opcode),
+    .funct(funct),
+    .imm(imm),
+    .result_reg(result_reg)
+  );
+  EXE_MEM_REG_module exe_mem_reg_module(
+    .clk(sys_clk),
+    .reset(reset_btn),
+    input wire [31:0] rf_wdata_i,
+    input wire [7:0] rf_waddr_i,
+    output reg [31:0] rf_wdata_o,
+    output reg [7:0] rf_waddr_o,
+  );
+  MEM_module mem_module(
+    .clk(sys_clk),
+    .reset(reset_btn),
+    .wb_cyc_o(wbm_cyc_o),
+    .wb_stb_o(wbm_stb_o),
+    .wb_ack_i(wbm_ack_i),
+    .wb_adr_o(wbm_adr_o),
+    .wb_dat_o(wbm_dat_o),
+    .wb_dat_i(wbm_dat_i),
+    .wb_sel_o(wbm_sel_o),
+    .wb_we_o(wbm_we_o)
+  );
+  MEM_WB_REG_module mem_wb_reg_module(
+    .clk(sys_clk),
+    .reset(reset_btn),
+    .result_reg_i(result_reg),
+    .rd_reg_i(rd_reg),
+    .result_reg_o(result_reg),
+    .rd_reg_o(rd_reg)
+  )
+  WB_module wb_module(
+    .reset(reset_btn),
+    .rd_reg(rd_reg),
+    .result_reg(result_reg)
+    .opcode(opcode)
+  )
 endmodule
