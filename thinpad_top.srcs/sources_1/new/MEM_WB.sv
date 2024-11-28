@@ -28,9 +28,9 @@ module MEM_WB(
             if (stall_i) begin
                 // stall
             end else if (bubble_i) begin
-                inst_op_o <= inst_op_i;
-                inst_type_o <= inst_type_i;
-                rf_waddr_o <= rf_waddr_i;
+                inst_op_o <= UNKNOWN_INST_OP;
+                inst_type_o <= UNKNOWN_INST_TYPE;
+                rf_waddr_o <= 32'h0;
                 rf_wdata_o <= 32'h0;
                 rf_we_o <= 0;
             end else begin
@@ -66,7 +66,7 @@ module MEM_WB(
                                 rf_we_o <= 1;
                             end
                             LB: begin
-                                rf_wdata_o <= rf_wdata_i;
+                                rf_wdata_o <= {{24{rf_wdata_i[7]}}, rf_wdata_i[7:0]};
                                 rf_we_o <= 1;
                             end
                             LW: begin

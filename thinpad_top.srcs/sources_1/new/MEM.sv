@@ -20,6 +20,7 @@ module MEM(
     output reg wb_we_o
 );
     always_comb begin
+        rf_wdata_o = wb_dat_i;
         case (inst_type_i)
             R_TYPE: begin
                 rf_we_o = 1;
@@ -66,8 +67,6 @@ module MEM(
 
     always_ff @(posedge clk_i) begin
         if (rst_i) begin
-            rf_wdata_o <= 32'h0;
-
             wb_cyc_o <= 0;
             wb_stb_o <= 0;
         end else begin
@@ -213,8 +212,6 @@ module MEM(
             if (wb_ack_i) begin
                 wb_cyc_o <= 0;
                 wb_stb_o <= 0;
-
-                rf_wdata_o <= wb_dat_i;
             end
         end
     end

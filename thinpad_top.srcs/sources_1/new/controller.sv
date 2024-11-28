@@ -1,8 +1,5 @@
 module controller(
-    input wire wbm0_cyc_i,
-    input wire wbm0_stb_i,
     input wire wbm0_ack_i,
-
     input wire wbm1_cyc_i,
     input wire wbm1_stb_i,
     input wire wbm1_ack_i,
@@ -26,10 +23,8 @@ module controller(
     output reg stall_mem_wb_o,
     output reg bubble_mem_wb_o
 );
-    logic read_mem_id_ex;
-
     always_comb begin
-        if ((wbm0_cyc_i && wbm0_stb_i && !wbm0_ack_i) || (wbm1_cyc_i && wbm1_stb_i && !wbm1_ack_i)) begin // wishbone stall
+        if ((!wbm1_cyc_i && !wbm1_stb_i && !wbm0_ack_i) || (wbm1_cyc_i && wbm1_stb_i && !wbm1_ack_i)) begin // wishbone stall
             stall_if_id_o=1'b1;
             bubble_if_id_o=1'b0;
 
@@ -54,7 +49,7 @@ module controller(
 
             stall_mem_wb_o=1'b0;
             bubble_mem_wb_o=1'b0;
-        end else if (read_mem_id_ex && (rf_raddr_a_if_id_i == rf_waddr_id_ex_i || rf_raddr_b_if_id_i == rf_waddr_id_ex_i)) begin // read after write
+        end else if (read_mem_id_ex_i && (rf_raddr_a_if_id_i == rf_waddr_id_ex_i || rf_raddr_b_if_id_i == rf_waddr_id_ex_i)) begin // read after write
             stall_if_id_o=1'b1;
             bubble_if_id_o=1'b0;
 

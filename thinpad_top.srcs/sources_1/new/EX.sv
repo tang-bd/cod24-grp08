@@ -1,7 +1,9 @@
 `include "./common/constants.svh"
 module EX(
     input wire [31:0] pc_i,
+    input wire [4:0] rf_raddr_a_i,
     input wire [31:0] rf_rdata_a_i,
+    input wire [4:0] rf_raddr_b_i,
     input wire [31:0] rf_rdata_b_i,
     input wire [4:0] inst_op_i,
     input wire [2:0] inst_type_i,
@@ -21,27 +23,26 @@ module EX(
     output reg [31:0] jump_addr_o,
     output reg [2:0] alu_op_o,
     output reg [31:0] alu_a_o,
-    output reg [31:0] alu_b_o
+    output reg [31:0] alu_b_o,
+    output reg [31:0] rf_rdata_b_o
 );
+    logic [31:0] rf_rdata_a;
 
     always_comb begin
-        logic [31:0] rf_rdata_a;
-        logic [31:0] rf_rdata_b;
-
         // We prioritize EX_MEM forwarding over MEM_WB forwarding
-        if (rf_we_mem_i && rf_waddr_ex_mem_i != 0 && rf_waddr_ex_mem_i == rf_rdata_a_i) begin
+        if (rf_we_mem_i && rf_waddr_ex_mem_i != 0 && rf_waddr_ex_mem_i == rf_raddr_a_i) begin
             rf_rdata_a = alu_y_ex_mem_i; // EX_MEM forwarding
-        end else if (rf_we_i && rf_waddr_i != 0 && rf_waddr_i == rf_rdata_a_i) begin
+        end else if (rf_we_i && rf_waddr_i != 0 && rf_waddr_i == rf_raddr_a_i) begin
             rf_rdata_a = rf_wdata_i; // MEM_WB forwarding
         end else begin
             rf_rdata_a = rf_rdata_a_i; // No forwarding
         end
-        if (rf_we_mem_i && rf_waddr_ex_mem_i != 0 && rf_waddr_ex_mem_i == rf_rdata_b_i) begin
-            rf_rdata_b = alu_y_ex_mem_i; // EX_MEM forwarding
-        end else if (rf_we_i && rf_waddr_i != 0 && rf_waddr_i == rf_rdata_b_i) begin
-            rf_rdata_b = rf_wdata_i; // MEM_WB forwarding
+        if (rf_we_mem_i && rf_waddr_ex_mem_i != 0 && rf_waddr_ex_mem_i == rf_raddr_b_i) begin
+            rf_rdata_b_o = alu_y_ex_mem_i; // EX_MEM forwarding
+        end else if (rf_we_i && rf_waddr_i != 0 && rf_waddr_i == rf_raddr_b_i) begin
+            rf_rdata_b_o = rf_wdata_i; // MEM_WB forwarding
         end else begin
-            rf_rdata_b = rf_rdata_b_i;
+            rf_rdata_b_o = rf_rdata_b_i;
         end
 
         case (inst_type_i)
@@ -56,7 +57,7 @@ module EX(
                     default: alu_op_o = ALU_ADD;
                 endcase
                 alu_a_o = rf_rdata_a;
-                alu_b_o = rf_rdata_b;
+                alu_b_o = rf_rdata_b_o;
             end
             I_TYPE: begin
                 jump_o = 0;
@@ -85,14 +86,14 @@ module EX(
             end
             B_TYPE: begin
                 case (inst_op_i)
-                    BEQ: jump_o = rf_rdata_a == rf_rdata_b;
-                    BNE: jump_o = rf_rdata_a != rf_rdata_b;
+                    BEQ: jump_o = rf_rdata_a == rf_rdata_b_o;
+                    BNE: jump_o = rf_rdata_a != rf_rdata_b_o;
                     default: jump_o = 0;
                 endcase
                 jump_addr_o = pc_i + imm_gen_data_i;
                 alu_op_o = ALU_ADD;
                 alu_a_o = rf_rdata_a;
-                alu_b_o = rf_rdata_b;
+                alu_b_o = rf_rdata_b_o;
             end
             U_TYPE: begin
                 jump_o = 0;
@@ -103,7 +104,7 @@ module EX(
                     AUIPC: alu_a_o = pc_i;
                     default: alu_a_o = 0;
                 endcase
-                alu_b_o = imm_gen_data_i << 12;
+                alu_b_o = imm_gen_data_i;
             end
             J_TYPE: begin
                 jump_o = 1;

@@ -34,7 +34,6 @@ module cpu (
     output reg [2:0] imm_gen_type_o,
     input wire [31:0] imm_gen_data_i
 );
-    logic [31:0] pc_if, inst_if;
     logic [31:0] jump_addr;
     logic jump;
 
@@ -45,15 +44,20 @@ module cpu (
 
     logic stall_if_id, bubble_if_id;
 
-    IF IF(
+    logic [31:0] pc_if_id, inst_if_id;
+    logic [4:0] rf_raddr_a_if_id, rf_raddr_b_if_id;
+
+    IF_ID IF_ID(
         .clk_i(clk_i),
         .rst_i(rst_i),
+        .stall_i(stall_if_id),
         .bubble_i(bubble_if_id),
-
         .jump_addr_i(jump_addr),
 
-        .pc_o(pc_if),
-        .inst_o(inst_if),
+        .pc_o(pc_if_id),
+        .inst_o(inst_if_id),
+        .rf_raddr_a_o(rf_raddr_a_if_id),
+        .rf_raddr_b_o(rf_raddr_b_if_id),
 
         .wb_cyc_o(wbm0_cyc_i),
         .wb_stb_o(wbm0_stb_i),
@@ -63,24 +67,6 @@ module cpu (
         .wb_dat_i(wbm0_dat_o),
         .wb_sel_o(wbm0_sel_i),
         .wb_we_o(wbm0_we_i)
-    );
-
-    logic [31:0] pc_if_id, inst_if_id;
-    logic [4:0] rf_raddr_a_if_id, rf_raddr_b_if_id;
-
-    IF_ID IF_ID(
-        .clk_i(clk_i),
-        .rst_i(rst_i),
-        .stall_i(stall_if_id),
-        .bubble_i(bubble_if_id),
-
-        .pc_i(pc_if),
-        .inst_i(inst_if),
-
-        .pc_o(pc_if_id),
-        .inst_o(inst_if_id),
-        .rf_raddr_a_o(rf_raddr_a_if_id),
-        .rf_raddr_b_o(rf_raddr_b_if_id)
     );
 
     logic stall_id_ex, bubble_id_ex;
@@ -110,18 +96,20 @@ module cpu (
         .read_mem_o(read_mem_id_ex)
     );
 
+    logic [31:0] rf_wdata_mem;
+    logic rf_we_mem;
+
     logic stall_ex_mem, bubble_ex_mem;
-    logic [31:0] pc_ex_mem, alu_y_ex_mem, rf_rdata_b_ex_mem;
+    logic [31:0] pc_ex_mem, alu_y_ex_mem, rf_rdata_b_mem, rf_rdata_b_ex_mem;
     logic [4:0] rf_waddr_ex_mem;
     logic [4:0] inst_op_ex_mem;
     logic [2:0] inst_type_ex_mem;
 
-    logic [31:0] rf_wdata_mem;
-    logic rf_we_mem;
-
     EX EX(
         .pc_i(pc_id_ex),
+        .rf_raddr_a_i(rf_raddr_a_o),
         .rf_rdata_a_i(rf_rdata_a_i),
+        .rf_raddr_b_i(rf_raddr_b_o),
         .rf_rdata_b_i(rf_rdata_b_i),
         .inst_op_i(inst_op_id_ex),
         .inst_type_i(inst_type_id_ex),
@@ -139,7 +127,8 @@ module cpu (
         .jump_addr_o(jump_addr),
         .alu_op_o(alu_op_o),
         .alu_a_o(alu_a_o),
-        .alu_b_o(alu_b_o)
+        .alu_b_o(alu_b_o),
+        .rf_rdata_b_o(rf_rdata_b_mem)
     );
 
     EX_MEM EX_MEM(
@@ -150,7 +139,7 @@ module cpu (
 
         .pc_i(pc_id_ex),
         .alu_y_i(alu_y_i),
-        .rf_rdata_b_i(rf_rdata_b_i),
+        .rf_rdata_b_i(rf_rdata_b_mem),
         .rf_waddr_i(rf_waddr_id_ex),
         .inst_op_i(inst_op_id_ex),
         .inst_type_i(inst_type_id_ex),
@@ -215,8 +204,6 @@ module cpu (
     );
 
     controller controller(
-        .wbm0_cyc_i(wbm0_cyc_i),
-        .wbm0_stb_i(wbm0_stb_i),
         .wbm0_ack_i(wbm0_ack_o),
         .wbm1_cyc_i(wbm1_cyc_i),
         .wbm1_stb_i(wbm1_stb_i),
