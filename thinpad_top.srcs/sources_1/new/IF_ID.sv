@@ -72,10 +72,17 @@ module IF_ID(
                 end
                 STALL: begin
                     if (!stall_i) begin
-                        pc_o <= pc_reg;
-                        inst_o <= inst_reg;
-                        pc_reg <= pc_reg + 4;
-                        state <= IDLE;
+                        if (bubble_i) begin
+                            pc_o <= 32'h0;
+                            inst_o <= 32'h0;
+                            pc_reg <= jump_addr_i;
+                            state <= IDLE;
+                        end else begin
+                            pc_o <= pc_reg;
+                            inst_o <= inst_reg;
+                            pc_reg <= pc_reg + 4;
+                            state <= IDLE;
+                        end
                     end
                 end
             endcase
