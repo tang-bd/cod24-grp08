@@ -75,24 +75,15 @@ module ID_EX(
             end
             7'b0110111: begin
                 inst_type_o = U_TYPE;
-                case(inst_reg[14:12])
-                    3'b000: inst_op_o = LUI;
-                    default: inst_op_o = UNKNOWN_INST_OP;
-                endcase
+                inst_op_o = LUI;
             end
             7'b0010111: begin
                 inst_type_o = U_TYPE;
-                case(inst_reg[14:12])
-                    3'b000: inst_op_o = AUIPC;
-                    default: inst_op_o = UNKNOWN_INST_OP;
-                endcase
+                inst_op_o = AUIPC;
             end
             7'b1101111: begin
                 inst_type_o = J_TYPE;
-                case(inst_reg[14:12])
-                    3'b000: inst_op_o = JAL;
-                    default: inst_op_o = UNKNOWN_INST_OP;
-                endcase
+                inst_op_o = JAL;
             end
             default: begin
                 inst_type_o = UNKNOWN_INST_TYPE;

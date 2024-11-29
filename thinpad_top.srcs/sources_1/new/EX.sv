@@ -60,18 +60,71 @@ module EX(
                 alu_b_o = rf_rdata_b_o;
             end
             I_TYPE: begin
-                jump_o = 0;
-                jump_addr_o = pc_i;
                 case (inst_op_i)
-                    ADDI: alu_op_o = ALU_ADD;
-                    ANDI: alu_op_o = ALU_AND;
-                    ORI: alu_op_o = ALU_OR;
-                    SLLI: alu_op_o = ALU_SLL;
-                    SRLI: alu_op_o = ALU_SRL;
-                    default: alu_op_o = ALU_ADD;
+                    ADDI: begin
+                        jump_o = 0;
+                        jump_addr_o = pc_i;
+                        alu_op_o = ALU_ADD;
+                        alu_a_o = rf_rdata_a;
+                        alu_b_o = imm_gen_data_i;
+                    end
+                    ANDI: begin
+                        jump_o = 0;
+                        jump_addr_o = pc_i;
+                        alu_op_o = ALU_AND;
+                        alu_a_o = rf_rdata_a;
+                        alu_b_o = imm_gen_data_i;
+                    end
+                    ORI: begin
+                        jump_o = 0;
+                        jump_addr_o = pc_i;
+                        alu_op_o = ALU_OR;
+                        alu_a_o = rf_rdata_a;
+                        alu_b_o = imm_gen_data_i;
+                    end
+                    SLLI: begin
+                        jump_o = 0;
+                        jump_addr_o = pc_i;
+                        alu_op_o = ALU_SLL;
+                        alu_a_o = rf_rdata_a;
+                        alu_b_o = imm_gen_data_i;
+                    end
+                    SRLI: begin
+                        jump_o = 0;
+                        jump_addr_o = pc_i;
+                        alu_op_o = ALU_SRL;
+                        alu_a_o = rf_rdata_a;
+                        alu_b_o = imm_gen_data_i;
+                    end
+                    LB: begin
+                        jump_o = 0;
+                        jump_addr_o = pc_i;
+                        alu_op_o = ALU_ADD;
+                        alu_a_o = rf_rdata_a;
+                        alu_b_o = imm_gen_data_i;
+                    end
+                    LW: begin
+                        jump_o = 0;
+                        jump_addr_o = pc_i;
+                        alu_op_o = ALU_ADD;
+                        alu_a_o = rf_rdata_a;
+                        alu_b_o = imm_gen_data_i;
+                    end
+                    JALR: begin
+                        jump_o = 1;
+                        jump_addr_o = rf_rdata_a + imm_gen_data_i;
+                        alu_op_o = ALU_ADD;
+                        alu_a_o = pc_i;
+                        alu_b_o = imm_gen_data_i;
+                    end
+                    default: begin
+                        jump_o = 0;
+                        jump_addr_o = pc_i;
+                        alu_op_o = ALU_ADD;
+                        alu_a_o = 0;
+                        alu_b_o = 0;
+                    end
                 endcase
-                alu_a_o = rf_rdata_a;
-                alu_b_o = imm_gen_data_i;
             end
             S_TYPE: begin
                 jump_o = 0;

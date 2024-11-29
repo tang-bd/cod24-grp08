@@ -20,7 +20,15 @@ module MEM(
     output reg wb_we_o
 );
     always_comb begin
-        rf_wdata_o = wb_dat_i;
+        case (inst_op_i)
+            LB: begin
+                rf_wdata_o = (wb_dat_i >> 8 * (wb_adr_o[1:0]));
+            end
+            default: begin
+                rf_wdata_o = wb_dat_i;
+            end
+        endcase
+
         case (inst_type_i)
             R_TYPE: begin
                 rf_we_o = 1;
@@ -126,7 +134,7 @@ module MEM(
                             wb_stb_o <= 1;
                             wb_adr_o <= alu_y_i;
                             wb_dat_o <= 32'h0;
-                            wb_sel_o <= 4'b0001;
+                            wb_sel_o <= 1 << (alu_y_i[1:0]);
                             wb_we_o <= 0;
                         end
                         LW: begin
@@ -162,7 +170,7 @@ module MEM(
                             wb_stb_o <= 1;
                             wb_adr_o <= alu_y_i;
                             wb_dat_o <= rf_rdata_b_i;
-                            wb_sel_o <= 4'b0001;
+                            wb_sel_o <= 1 << (alu_y_i[1:0]);
                             wb_we_o <= 1;
                         end
                         SW: begin
