@@ -1,4 +1,4 @@
-`default_nettype none
+`include "./common/constants.svh"
 
 module thinpad_top (
     input wire clk_50M,     // 50MHz 时钟输入
@@ -96,131 +96,25 @@ module thinpad_top (
                        // 后级电路复位信号应当由它生成（见下）
   );
 
-  logic reset_of_clk10M;
+  /* =========== Demo code end =========== */
+
+  logic sys_clk;
+  logic sys_rst;
+
+  assign sys_clk = clk_50M;
+  logic sys_rst;
   // 异步复位，同步释放，将 locked 信号转为后级电路的复位 reset_of_clk10M
-  always_ff @(posedge clk_10M or negedge locked) begin
-    if (~locked) reset_of_clk10M <= 1'b1;
-    else reset_of_clk10M <= 1'b0;
+  always_ff @(posedge sys_clk or negedge locked) begin
+    if (~locked) sys_rst <= 1'b1;
+    else sys_rst <= 1'b0;
   end
 
-  always_ff @(posedge clk_10M or posedge reset_of_clk10M) begin
-    if (reset_of_clk10M) begin
-      // Your Code
-    end else begin
-      // Your Code
-    end
-  end
-
-  // 不使用内存、串口时，禁用其使能信号
-  assign base_ram_ce_n = 1'b1;
-  assign base_ram_oe_n = 1'b1;
-  assign base_ram_we_n = 1'b1;
-
-  assign ext_ram_ce_n = 1'b1;
-  assign ext_ram_oe_n = 1'b1;
-  assign ext_ram_we_n = 1'b1;
-
+  // 本实验不使用 CPLD 串口，禁用防止总线冲突
   assign uart_rdn = 1'b1;
   assign uart_wrn = 1'b1;
 
-  // 数码管连接关系示意图，dpy1 同理
-  // p=dpy0[0] // ---a---
-  // c=dpy0[1] // |     |
-  // d=dpy0[2] // f     b
-  // e=dpy0[3] // |     |
-  // b=dpy0[4] // ---g---
-  // a=dpy0[5] // |     |
-  // f=dpy0[6] // e     c
-  // g=dpy0[7] // |     |
-  //           // ---d---  p
-
-  // 7 段数码管译码器演示，将 number 用 16 进制显示在数码管上面
-  logic [7:0] number;
-  SEG7_LUT segL (
-      .oSEG1(dpy0),
-      .iDIG (number[3:0])
-  );  // dpy0 是低位数码管
-  SEG7_LUT segH (
-      .oSEG1(dpy1),
-      .iDIG (number[7:4])
-  );  // dpy1 是高位数码管
-
-  logic [15:0] led_bits;
-  assign leds = led_bits;
-
-  always_ff @(posedge push_btn or posedge reset_btn) begin
-    if (reset_btn) begin  // 复位按下，设置 LED 为初始值
-      led_bits <= 16'h1;
-    end else begin  // 每次按下按钮开关，LED 循环左移
-      led_bits <= {led_bits[14:0], led_bits[15]};
-    end
-  end
-
-  // 直连串口接收发送演示，从直连串口收到的数据再发送出去
-  logic [7:0] ext_uart_rx;
-  logic [7:0] ext_uart_buffer, ext_uart_tx;
-  logic ext_uart_ready, ext_uart_clear, ext_uart_busy;
-  logic ext_uart_start, ext_uart_avai;
-
-  assign number = ext_uart_buffer;
-
-  // 接收模块，9600 无检验位
-  async_receiver #(
-      .ClkFrequency(50000000),
-      .Baud(9600)
-  ) ext_uart_r (
-      .clk           (clk_50M),         // 外部时钟信号
-      .RxD           (rxd),             // 外部串行信号输入
-      .RxD_data_ready(ext_uart_ready),  // 数据接收到标志
-      .RxD_clear     (ext_uart_clear),  // 清除接收标志
-      .RxD_data      (ext_uart_rx)      // 接收到的一字节数据
-  );
-
-  assign ext_uart_clear = ext_uart_ready; // 收到数据的同时，清除标志，因为数据已取到 ext_uart_buffer 中
-  always_ff @(posedge clk_50M) begin  // 接收到缓冲区 ext_uart_buffer
-    if (ext_uart_ready) begin
-      ext_uart_buffer <= ext_uart_rx;
-      ext_uart_avai   <= 1;
-    end else if (!ext_uart_busy && ext_uart_avai) begin
-      ext_uart_avai <= 0;
-    end
-  end
-  always_ff @(posedge clk_50M) begin  // 将缓冲区 ext_uart_buffer 发送出去
-    if (!ext_uart_busy && ext_uart_avai) begin
-      ext_uart_tx <= ext_uart_buffer;
-      ext_uart_start <= 1;
-    end else begin
-      ext_uart_start <= 0;
-    end
-  end
-
-  // 发送模块，9600 无检验位
-  async_transmitter #(
-      .ClkFrequency(50000000),
-      .Baud(9600)
-  ) ext_uart_t (
-      .clk      (clk_50M),         // 外部时钟信号
-      .TxD      (txd),             // 串行信号输出
-      .TxD_busy (ext_uart_busy),   // 发送器忙状态指示
-      .TxD_start(ext_uart_start),  // 开始发送信号
-      .TxD_data (ext_uart_tx)      // 待发送的数据
-  );
-
-  // 图像输出演示，分辨率 800x600@72Hz，像素时钟为 50MHz
-  logic [11:0] hdata;
-  assign video_red   = hdata < 266 ? 3'b111 : 0;  // 红色竖条
-  assign video_green = hdata < 532 && hdata >= 266 ? 3'b111 : 0;  // 绿色竖条
-  assign video_blue  = hdata >= 532 ? 2'b11 : 0;  // 蓝色竖条
-  assign video_clk   = clk_50M;
-  vga #(12, 800, 856, 976, 1040, 600, 637, 643, 666, 1, 1) vga800x600at72 (
-      .clk        (clk_50M),
-      .hdata      (hdata),        // 横坐标
-      .vdata      (),             // 纵坐标
-      .hsync      (video_hsync),
-      .vsync      (video_vsync),
-      .data_enable(video_de)
-  );
-  /* =========== Demo code end =========== */
+  /* =========== Wishbone Master begin =========== */
+  // Wishbone Master => Wishbone MUX (Slave)
   logic        wbm_cyc_o;
   logic        wbm_stb_o;
   logic        wbm_ack_i;
@@ -230,119 +124,248 @@ module thinpad_top (
   logic [ 3:0] wbm_sel_o;
   logic        wbm_we_o;
 
-  reg [31:0] pc_reg;
-  reg [31:0] pc_reg_next;
-  reg [31:0] inst_reg;
-  logic [31:0] imm;
-  reg [6:0] opcode;
-  reg [2:0] funct;
-
-  reg [31:0]oprand1_reg;
-  reg [31:0]oprand2_reg;
-  reg [4:0]rd_reg;
   
 
+  /* =========== Wishbone Master end =========== */
+
+  /* =========== Wishbone MUX begin =========== */
+  // Wishbone MUX (Masters) => bus slaves
+  logic wbs0_cyc_o;
+  logic wbs0_stb_o;
+  logic wbs0_ack_i;
+  logic [31:0] wbs0_adr_o;
+  logic [31:0] wbs0_dat_o;
+  logic [31:0] wbs0_dat_i;
+  logic [3:0] wbs0_sel_o;
+  logic wbs0_we_o;
+
+  logic wbs1_cyc_o;
+  logic wbs1_stb_o;
+  logic wbs1_ack_i;
+  logic [31:0] wbs1_adr_o;
+  logic [31:0] wbs1_dat_o;
+  logic [31:0] wbs1_dat_i;
+  logic [3:0] wbs1_sel_o;
+  logic wbs1_we_o;
+
+  logic wbs2_cyc_o;
+  logic wbs2_stb_o;
+  logic wbs2_ack_i;
+  logic [31:0] wbs2_adr_o;
+  logic [31:0] wbs2_dat_o;
+  logic [31:0] wbs2_dat_i;
+  logic [3:0] wbs2_sel_o;
+  logic wbs2_we_o;
+
+  wb_mux wb_mux (
+      .clk(sys_clk),
+      .rst(sys_rst),
+
+      // Master interface (to Lab5 master)
+      .wbm_adr_i(wbm_adr_o),
+      .wbm_dat_i(wbm_dat_o),
+      .wbm_dat_o(wbm_dat_i),
+      .wbm_we_i (wbm_we_o),
+      .wbm_sel_i(wbm_sel_o),
+      .wbm_stb_i(wbm_stb_o),
+      .wbm_ack_o(wbm_ack_i),
+      .wbm_err_o(),
+      .wbm_rty_o(),
+      .wbm_cyc_i(wbm_cyc_o),
+
+      // Slave interface 0 (to BaseRAM controller)
+      // Address range: 0x8000_0000 ~ 0x803F_FFFF
+      .wbs0_addr    (32'h8000_0000),
+      .wbs0_addr_msk(32'hFFC0_0000),
+
+      .wbs0_adr_o(wbs0_adr_o),
+      .wbs0_dat_i(wbs0_dat_i),
+      .wbs0_dat_o(wbs0_dat_o),
+      .wbs0_we_o (wbs0_we_o),
+      .wbs0_sel_o(wbs0_sel_o),
+      .wbs0_stb_o(wbs0_stb_o),
+      .wbs0_ack_i(wbs0_ack_i),
+      .wbs0_err_i('0),
+      .wbs0_rty_i('0),
+      .wbs0_cyc_o(wbs0_cyc_o),
+
+      // Slave interface 1 (to ExtRAM controller)
+      // Address range: 0x8040_0000 ~ 0x807F_FFFF
+      .wbs1_addr    (32'h8040_0000),
+      .wbs1_addr_msk(32'hFFC0_0000),
+
+      .wbs1_adr_o(wbs1_adr_o),
+      .wbs1_dat_i(wbs1_dat_i),
+      .wbs1_dat_o(wbs1_dat_o),
+      .wbs1_we_o (wbs1_we_o),
+      .wbs1_sel_o(wbs1_sel_o),
+      .wbs1_stb_o(wbs1_stb_o),
+      .wbs1_ack_i(wbs1_ack_i),
+      .wbs1_err_i('0),
+      .wbs1_rty_i('0),
+      .wbs1_cyc_o(wbs1_cyc_o),
+
+      // Slave interface 2 (to UART controller)
+      // Address range: 0x1000_0000 ~ 0x1000_FFFF
+      .wbs2_addr    (32'h1000_0000),
+      .wbs2_addr_msk(32'hFFFF_0000),
+
+      .wbs2_adr_o(wbs2_adr_o),
+      .wbs2_dat_i(wbs2_dat_i),
+      .wbs2_dat_o(wbs2_dat_o),
+      .wbs2_we_o (wbs2_we_o),
+      .wbs2_sel_o(wbs2_sel_o),
+      .wbs2_stb_o(wbs2_stb_o),
+      .wbs2_ack_i(wbs2_ack_i),
+      .wbs2_err_i('0),
+      .wbs2_rty_i('0),
+      .wbs2_cyc_o(wbs2_cyc_o)
+  );
+
+  /* =========== Wishbone MUX end =========== */
+
+  /* =========== Wishbone Slaves begin =========== */
+
+  sram_controller #(
+      .SRAM_ADDR_WIDTH(20),
+      .SRAM_DATA_WIDTH(32)
+  ) sram_controller_base (
+      .clk_i(sys_clk),
+      .rst_i(sys_rst),
+
+      // Wishbone slave (to MUX)
+      .wb_cyc_i(wbs0_cyc_o),
+      .wb_stb_i(wbs0_stb_o),
+      .wb_ack_o(wbs0_ack_i),
+      .wb_adr_i(wbs0_adr_o),
+      .wb_dat_i(wbs0_dat_o),
+      .wb_dat_o(wbs0_dat_i),
+      .wb_sel_i(wbs0_sel_o),
+      .wb_we_i (wbs0_we_o),
+
+      // To SRAM chip
+      .sram_addr(base_ram_addr),
+      .sram_data(base_ram_data),
+      .sram_ce_n(base_ram_ce_n),
+      .sram_oe_n(base_ram_oe_n),
+      .sram_we_n(base_ram_we_n),
+      .sram_be_n(base_ram_be_n)
+  );
+
+  sram_controller #(
+      .SRAM_ADDR_WIDTH(20),
+      .SRAM_DATA_WIDTH(32)
+  ) sram_controller_ext (
+      .clk_i(sys_clk),
+      .rst_i(sys_rst),
+
+      // Wishbone slave (to MUX)
+      .wb_cyc_i(wbs1_cyc_o),
+      .wb_stb_i(wbs1_stb_o),
+      .wb_ack_o(wbs1_ack_i),
+      .wb_adr_i(wbs1_adr_o),
+      .wb_dat_i(wbs1_dat_o),
+      .wb_dat_o(wbs1_dat_i),
+      .wb_sel_i(wbs1_sel_o),
+      .wb_we_i (wbs1_we_o),
+
+      // To SRAM chip
+      .sram_addr(ext_ram_addr),
+      .sram_data(ext_ram_data),
+      .sram_ce_n(ext_ram_ce_n),
+      .sram_oe_n(ext_ram_oe_n),
+      .sram_we_n(ext_ram_we_n),
+      .sram_be_n(ext_ram_be_n)
+  );
+
+  // 串口控制器模块
+  // NOTE: 如果修改系统时钟频率，也需要修改此处的时钟频率参数
+  uart_controller #(
+      .CLK_FREQ(50_000_000),
+      .BAUD    (115200)
+  ) uart_controller (
+      .clk_i(sys_clk),
+      .rst_i(sys_rst),
+
+      .wb_cyc_i(wbs2_cyc_o),
+      .wb_stb_i(wbs2_stb_o),
+      .wb_ack_o(wbs2_ack_i),
+      .wb_adr_i(wbs2_adr_o),
+      .wb_dat_i(wbs2_dat_o),
+      .wb_dat_o(wbs2_dat_i),
+      .wb_sel_i(wbs2_sel_o),
+      .wb_we_i (wbs2_we_o),
+
+      // to UART pins
+      .uart_txd_o(txd),
+      .uart_rxd_i(rxd)
+  );
+
+  /* =========== Wishbone Slaves end =========== */
+
+  /* =========== ALU begin =========== */
+
+  // ALU 模块
+  logic [31:0] alu_a;
+  logic [31:0] alu_b;
+  logic [ 2:0] alu_op;
+  logic [31:0] alu_y;
+  
+  alu alu(
+    .alu_a(alu_a),
+    .alu_b(alu_b),
+    .alu_op(alu_op),
+    .alu_y(alu_y)
+  );
+
+  /* =========== ALU end =========== */
+
+  /* =========== ImmGen begin =========== */
+
+  // ImmGen 模块
+  logic [31:0] imm_gen_inst;
+  logic [2:0] imm_gen_type;
+  logic [31:0] imm_gen_data;
+
+  imm_gen imm_gen(
+    .imm_gen_inst(imm_gen_inst),
+    .imm_gen_type(imm_gen_type),
+    .imm_gen_data(imm_gen_data)
+  );
+
+  /* =========== ImmGen end =========== */
+
+  /* =========== RF begin =========== */
+
+  // RF 模块
+  logic [4:0] rf_raddr_a;
+  logic [4:0] rf_raddr_b;
+  logic [31:0] rf_rdata_a;
+  logic [31:0] rf_rdata_b;
   logic [4:0] rf_waddr;
   logic [31:0] rf_wdata;
   logic rf_we;
-  logic [4:0] rf_raddr_a;
-  logic [31:0] rf_rdata_a;
-  logic [4:0] rf_raddr_b;
-  logic [31:0] rf_rdata_b;
 
-  logic [31:0] alu_a;
-  logic [31:0] alu_b;
-  logic [3:0] alu_op;
-  logic [31:0] alu_y;
-  
-  ALU_32 alu_32(
-    .a(alu_a),
-    .b(alu_b),
-    .op(alu_op),
-    .y(alu_y)
-  );
-
-  RegFile_32 rf_32(
-    .waddr(rf_waddr),
-    .wdata(rf_wdata),
-    .we(rf_we),
-    .raddr_a(rf_raddr_a),
-    .rdata_a(rf_rdata_a),
-    .raddr_b(rf_raddr_b),
-    .rdata_b(rf_rdata_b),
-    .clk(sys_clk)
-  );
-
-  IF_module if_module(
-    .clk(sys_clk),
-    .reset(reset_btn),
-    .pc_reg(pc_reg),
-    .inst_reg(inst_reg),
-    .pc_next_reg(pc_reg_next),
-    .wb_cyc_o(wbm_cyc_o),
-    .wb_stb_o(wbm_stb_o),
-    .wb_ack_i(wbm_ack_i),
-    .wb_adr_o(wbm_adr_o),
-    .wb_dat_o(wbm_dat_o),
-    .wb_dat_i(wbm_dat_i),
-    .wb_sel_o(wbm_sel_o),
-    .wb_we_o(wbm_we_o)
-  );
-  IF_ID_REG_module if_id_reg_module(
-    .clk(sys_clk),
-    .reset(reset_btn),
-    .inst_reg_i(inst_reg),
-    .inst_reg_o(inst_reg)
-  );
-  ID_module id_module(
-    .reset(reset_btn),
-    .inst_reg(inst_reg),
+  register_file rf(
+    .clk_i(sys_clk),
     .rf_raddr_a(rf_raddr_a),
     .rf_raddr_b(rf_raddr_b),
-    .rd_reg(rd_reg),
-    .opcode(opcode),
-    .funct(funct),
-    .imm(imm),
-    .oprand1_reg(oprand1_reg),
-    .oprand2_reg(oprand2_reg)
+    .rf_rdata_a(rf_rdata_a),
+    .rf_rdata_b(rf_rdata_b),
+    .rf_waddr(rf_waddr),
+    .rf_wdata(rf_wdata),
+    .rf_we(rf_we)
   );
-  ID_EXE_REG_module id_exe_reg_module(
-    .clk(sys_clk),
-    .reset(reset_btn),
-    .rd_reg_i(rd_reg),
-    .opcode_i(opcode),
-    .funct_i(funct),
-    .imm_i(imm),
-    .oprand1_reg_i(oprand1_reg),
-    .oprand2_reg_i(oprand2_reg),
-    .rd_reg_o(rd_reg),
-    .opcode_o(opcode),
-    .funct_o(funct),
-    .imm_o(imm),
-    .oprand1_reg_o(oprand1_reg),
-    .oprand2_reg_o(oprand2_reg)
-  )
-  EXE_module exe_module(
-    .reset(reset_btn),
-    .inst_reg(inst_reg),
-    .oprand1_reg(oprand1_reg),
-    .oprand2_reg(oprand2_reg),
-    .opcode(opcode),
-    .funct(funct),
-    .imm(imm),
-    .result_reg(result_reg)
-  );
-  EXE_MEM_REG_module exe_mem_reg_module(
-    .clk(sys_clk),
-    .reset(reset_btn),
-    input wire [31:0] rf_wdata_i,
-    input wire [7:0] rf_waddr_i,
-    output reg [31:0] rf_wdata_o,
-    output reg [7:0] rf_waddr_o,
-  );
-  MEM_module mem_module(
-    .clk(sys_clk),
-    .reset(reset_btn),
+
+  /* =========== RF end =========== */
+
+  /* =========== Central Processing Unit begin =========== */
+
+  // CPU 模块
+  
+  cpu cpu(
+    .clk_i(sys_clk),
+    .rst_i(sys_rst),
     .wb_cyc_o(wbm_cyc_o),
     .wb_stb_o(wbm_stb_o),
     .wb_ack_i(wbm_ack_i),
@@ -350,20 +373,23 @@ module thinpad_top (
     .wb_dat_o(wbm_dat_o),
     .wb_dat_i(wbm_dat_i),
     .wb_sel_o(wbm_sel_o),
-    .wb_we_o(wbm_we_o)
+    .wb_we_o(wbm_we_o),
+    .rf_raddr_a_o(rf_raddr_a),
+    .rf_raddr_b_o(rf_raddr_b),
+    .rf_rdata_a_i(rf_rdata_a),
+    .rf_rdata_b_i(rf_rdata_b),
+    .rf_waddr_o(rf_waddr),
+    .rf_wdata_o(rf_wdata),
+    .rf_we_o(rf_we),
+    .alu_a_o(alu_a),
+    .alu_b_o(alu_b),
+    .alu_op_o(alu_op),
+    .alu_y_i(alu_y),
+    .imm_gen_inst_o(imm_gen_inst),
+    .imm_gen_type_o(imm_gen_type),
+    .imm_gen_data_i(imm_gen_data)
   );
-  MEM_WB_REG_module mem_wb_reg_module(
-    .clk(sys_clk),
-    .reset(reset_btn),
-    .result_reg_i(result_reg),
-    .rd_reg_i(rd_reg),
-    .result_reg_o(result_reg),
-    .rd_reg_o(rd_reg)
-  )
-  WB_module wb_module(
-    .reset(reset_btn),
-    .rd_reg(rd_reg),
-    .result_reg(result_reg)
-    .opcode(opcode)
-  )
+
+  /* =========== Central Processing Unit end =========== */
+
 endmodule

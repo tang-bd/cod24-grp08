@@ -46,13 +46,12 @@ module tb;
   wire uart_tsre;  // 数据发送完毕标志
 
   // Windows 需要注意路径分隔符的转义，例如 "D:\\foo\\bar.bin"
-  parameter BASE_RAM_INIT_FILE = "/tmp/main.bin"; // BaseRAM 初始化文件，请修改为实际的绝对路径
-  parameter EXT_RAM_INIT_FILE = "/tmp/eram.bin";  // ExtRAM 初始化文件，请修改为实际的绝对路径
-  parameter FLASH_INIT_FILE = "/tmp/kernel.elf";  // Flash 初始化文件，请修改为实际的绝对路径
+  parameter BASE_RAM_INIT_FILE = "D:\\kernel.bin"; // BaseRAM 初始化文件，请修改为实际的绝对路径
+  parameter EXT_RAM_INIT_FILE = "";  // ExtRAM 初始化文件，请修改为实际的绝对路径
+  parameter FLASH_INIT_FILE = "";  // Flash 初始化文件，请修改为实际的绝对路径
 
   initial begin
     // 在这里可以自定义测试输入序列，例如：
-    dip_sw = 32'h2;
     touch_btn = 0;
     reset_btn = 0;
     push_btn = 0;
@@ -61,17 +60,130 @@ module tb;
     reset_btn = 1;
     #100;
     reset_btn = 0;
-    for (integer i = 0; i < 20; i = i + 1) begin
-      #100;  // 等待 100ns
-      push_btn = 1;  // 按下 push_btn 按钮
-      #100;  // 等待 100ns
-      push_btn = 0;  // 松开 push_btn 按钮
-    end
-  
-    // 模拟 PC 通过直连串口，向 FPGA 发送字符
-    uart.pc_send_byte(8'h32); // ASCII '2'
-    #10000;
-    uart.pc_send_byte(8'h33); // ASCII '3'
+
+    #5000000;
+    $display("Start testing");
+
+    uart.pc_send_byte(8'h57);  // 'W'
+    #200;
+    uart.pc_send_byte(8'h41);  // 1
+    #200;
+    uart.pc_send_byte(8'h00);
+    #200;
+    uart.pc_send_byte(8'h00);
+    #200;
+    uart.pc_send_byte(8'h10);
+    #200;
+    uart.pc_send_byte(8'h80);
+    #200;
+
+    uart.pc_send_byte(8'h04);
+    #200;
+    uart.pc_send_byte(8'h00);
+    #200;
+    uart.pc_send_byte(8'h00);
+    #200;
+    uart.pc_send_byte(8'h00);
+    #200;
+
+    uart.pc_send_byte(8'h37);
+    #200;
+    uart.pc_send_byte(8'h05);
+    #200;
+    uart.pc_send_byte(8'hc1);
+    #200;
+    uart.pc_send_byte(8'h7f);
+    #200;
+
+    uart.pc_send_byte(8'h41);  // 2
+    #200;
+
+    uart.pc_send_byte(8'h04);
+    #200;
+    uart.pc_send_byte(8'h00);
+    #200;
+    uart.pc_send_byte(8'h10);
+    #200;
+    uart.pc_send_byte(8'h80);
+    #200;
+    
+    uart.pc_send_byte(8'h04);
+    #200;
+    uart.pc_send_byte(8'h00);
+    #200;
+    uart.pc_send_byte(8'h00);
+    #200;
+    uart.pc_send_byte(8'h00);
+    #200;
+
+    uart.pc_send_byte(8'h03);
+    #200;
+    uart.pc_send_byte(8'h2e);
+    #200;
+    uart.pc_send_byte(8'h05);
+    #200;
+    uart.pc_send_byte(8'h00);
+    #200;
+
+    uart.pc_send_byte(8'h41);  // 3
+    #200;
+
+    uart.pc_send_byte(8'h08);
+    #200;
+    uart.pc_send_byte(8'h00);
+    #200;
+    uart.pc_send_byte(8'h10);
+    #200;
+    uart.pc_send_byte(8'h80);
+    #200;
+    
+    uart.pc_send_byte(8'h04);
+    #200;
+    uart.pc_send_byte(8'h00);
+    #200;
+    uart.pc_send_byte(8'h00);
+    #200;
+    uart.pc_send_byte(8'h00);
+    #200;
+
+    uart.pc_send_byte(8'h23);
+    #200;
+    uart.pc_send_byte(8'h20);
+    #200;
+    uart.pc_send_byte(8'hc5);
+    #200;
+    uart.pc_send_byte(8'h01);
+    #200;
+
+    uart.pc_send_byte(8'h41);  // 4
+    #200;
+
+    uart.pc_send_byte(8'h0c);
+    #200;
+    uart.pc_send_byte(8'h00);
+    #200;
+    uart.pc_send_byte(8'h10);
+    #200;
+    uart.pc_send_byte(8'h80);
+    #200;
+    
+    uart.pc_send_byte(8'h04);
+    #200;
+    uart.pc_send_byte(8'h00);
+    #200;
+    uart.pc_send_byte(8'h00);
+    #200;
+    uart.pc_send_byte(8'h00);
+    #200;
+
+    uart.pc_send_byte(8'h67);
+    #200;
+    uart.pc_send_byte(8'h80);
+    #200;
+    uart.pc_send_byte(8'h00);
+    #200;
+    uart.pc_send_byte(8'h00);
+    #200;
   end
 
   // 待测试用户设计
