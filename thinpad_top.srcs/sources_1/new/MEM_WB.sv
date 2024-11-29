@@ -66,7 +66,7 @@ module MEM_WB(
                                 rf_we_o <= 1;
                             end
                             LB: begin
-                                rf_wdata_o <= rf_wdata_i;
+                                rf_wdata_o <= {{24{rf_wdata_i[7]}}, rf_wdata_i[7:0]};
                                 rf_we_o <= 1;
                             end
                             LW: begin
