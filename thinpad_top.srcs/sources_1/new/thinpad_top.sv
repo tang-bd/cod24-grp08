@@ -359,6 +359,131 @@ module thinpad_top (
 
   /* =========== RF end =========== */
 
+  /* =========== Cache begin =========== */
+
+  logic wbm0_cyc_i, wbm0_stb_i, wbm0_ack_o;
+  logic [31:0] wbm0_adr_i, wbm0_dat_i, wbm0_dat_o;
+  logic [3:0] wbm0_sel_i;
+  logic wbm0_we_i;
+
+  logic wbm1_cyc_i, wbm1_stb_i, wbm1_ack_o;
+  logic [31:0] wbm1_adr_i, wbm1_dat_i, wbm1_dat_o;
+  logic [3:0] wbm1_sel_i;
+  logic wbm1_we_i;
+
+  logic wbc0_cyc_i, wbc0_stb_i, wbc0_ack_o;
+  logic [31:0] wbc0_adr_i, wbc0_dat_i, wbc0_dat_o;
+  logic [3:0] wbc0_sel_i;
+  logic wbc0_we_i;
+
+  logic wbc1_cyc_i, wbc1_stb_i, wbc1_ack_o;
+  logic [31:0] wbc1_adr_i, wbc1_dat_i, wbc1_dat_o;
+  logic [3:0] wbc1_sel_i;
+  logic wbc1_we_i;
+
+  cache #(
+      .DATA_WIDTH(32),
+      .ADDR_WIDTH(32),
+      .TAG_WIDTH(22),
+      .INDEX_WIDTH(8),
+      .OFFSET_WIDTH(2)
+  ) icache (
+      .clk_i(sys_clk),
+      .rst_i(sys_rst),
+
+      .cache_addr(32'h8000_0000),
+      .cache_mask(32'hF000_0000),
+
+      .wb_cyc_i(wbm0_cyc_i),
+      .wb_stb_i(wbm0_stb_i),
+      .wb_ack_o(wbm0_ack_o),
+      .wb_adr_i(wbm0_adr_i),
+      .wb_dat_i(wbm0_dat_i),
+      .wb_dat_o(wbm0_dat_o),
+      .wb_sel_i(wbm0_sel_i),
+      .wb_we_i(wbm0_we_i),
+
+      .mem_cyc_o(wbc0_cyc_i),
+      .mem_stb_o(wbc0_stb_i),
+      .mem_ack_i(wbc0_ack_o),
+      .mem_adr_o(wbc0_adr_i),
+      .mem_dat_o(wbc0_dat_i),
+      .mem_dat_i(wbc0_dat_o),
+      .mem_sel_o(wbc0_sel_i),
+      .mem_we_o(wbc0_we_i)
+  );
+
+  cache #(
+      .DATA_WIDTH(32),
+      .ADDR_WIDTH(32),
+      .TAG_WIDTH(22),
+      .INDEX_WIDTH(8),
+      .OFFSET_WIDTH(2)
+  ) dcache (
+      .clk_i(sys_clk),
+      .rst_i(sys_rst),
+
+      .cache_addr(32'h8000_0000),
+      .cache_mask(32'hF000_0000),
+
+      .wb_cyc_i(wbm1_cyc_i),
+      .wb_stb_i(wbm1_stb_i),
+      .wb_ack_o(wbm1_ack_o),
+      .wb_adr_i(wbm1_adr_i),
+      .wb_dat_i(wbm1_dat_i),
+      .wb_dat_o(wbm1_dat_o),
+      .wb_sel_i(wbm1_sel_i),
+      .wb_we_i(wbm1_we_i),
+
+      .mem_cyc_o(wbc1_cyc_i),
+      .mem_stb_o(wbc1_stb_i),
+      .mem_ack_i(wbc1_ack_o),
+      .mem_adr_o(wbc1_adr_i),
+      .mem_dat_o(wbc1_dat_i),
+      .mem_dat_i(wbc1_dat_o),
+      .mem_sel_o(wbc1_sel_i),
+      .mem_we_o(wbc1_we_i)
+  );
+
+  /* =========== Cache end =========== */
+
+  /* =========== Arbiter begin =========== */
+
+  wb_arbiter_2 arbiter(
+        .clk(sys_clk),
+        .rst(sys_rst),
+        .wbm0_cyc_i(wbc0_cyc_i),
+        .wbm0_stb_i(wbc0_stb_i),
+        .wbm0_ack_o(wbc0_ack_o),
+        .wbm0_adr_i(wbc0_adr_i),
+        .wbm0_dat_i(wbc0_dat_i),
+        .wbm0_dat_o(wbc0_dat_o),
+        .wbm0_sel_i(wbc0_sel_i),
+        .wbm0_we_i(wbc0_we_i),
+        .wbm0_err_o(),
+        .wbm0_rty_o(),
+        .wbm1_cyc_i(wbc1_cyc_i),
+        .wbm1_stb_i(wbc1_stb_i),
+        .wbm1_ack_o(wbc1_ack_o),
+        .wbm1_adr_i(wbc1_adr_i),
+        .wbm1_dat_i(wbc1_dat_i),
+        .wbm1_dat_o(wbc1_dat_o),
+        .wbm1_sel_i(wbc1_sel_i),
+        .wbm1_we_i(wbc1_we_i),
+        .wbm1_err_o(),
+        .wbm1_rty_o(),
+        .wbs_cyc_o(wbm_cyc_o),
+        .wbs_stb_o(wbm_stb_o),
+        .wbs_ack_i(wbm_ack_i),
+        .wbs_adr_o(wbm_adr_o),
+        .wbs_dat_o(wbm_dat_o),
+        .wbs_dat_i(wbm_dat_i),
+        .wbs_sel_o(wbm_sel_o),
+        .wbs_we_o(wbm_we_o)
+    );
+
+  /* =========== Arbiter end =========== */
+
   /* =========== Central Processing Unit begin =========== */
 
   // CPU 模块
@@ -366,14 +491,22 @@ module thinpad_top (
   cpu cpu(
     .clk_i(sys_clk),
     .rst_i(sys_rst),
-    .wb_cyc_o(wbm_cyc_o),
-    .wb_stb_o(wbm_stb_o),
-    .wb_ack_i(wbm_ack_i),
-    .wb_adr_o(wbm_adr_o),
-    .wb_dat_o(wbm_dat_o),
-    .wb_dat_i(wbm_dat_i),
-    .wb_sel_o(wbm_sel_o),
-    .wb_we_o(wbm_we_o),
+    .wbm0_cyc_o(wbm0_cyc_i),
+    .wbm0_stb_o(wbm0_stb_i),
+    .wbm0_ack_i(wbm0_ack_o),
+    .wbm0_adr_o(wbm0_adr_i),
+    .wbm0_dat_o(wbm0_dat_i),
+    .wbm0_dat_i(wbm0_dat_o),
+    .wbm0_sel_o(wbm0_sel_i),
+    .wbm0_we_o(wbm0_we_i),
+    .wbm1_cyc_o(wbm1_cyc_i),
+    .wbm1_stb_o(wbm1_stb_i),
+    .wbm1_ack_i(wbm1_ack_o),
+    .wbm1_adr_o(wbm1_adr_i),
+    .wbm1_dat_o(wbm1_dat_i),
+    .wbm1_dat_i(wbm1_dat_o),
+    .wbm1_sel_o(wbm1_sel_i),
+    .wbm1_we_o(wbm1_we_i),
     .rf_raddr_a_o(rf_raddr_a),
     .rf_raddr_b_o(rf_raddr_b),
     .rf_rdata_a_i(rf_rdata_a),
