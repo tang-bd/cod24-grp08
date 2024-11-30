@@ -10,8 +10,9 @@ module cache #(
     input wire clk_i,
     input wire rst_i,
 
-    input wire [31:0] cache_addr,
-    input wire [31:0] cache_mask,
+    input wire fence_i,
+    input wire [31:0] cache_addr_i,
+    input wire [31:0] cache_mask_i,
 
     // wishbone slave interface
     input wire wb_cyc_i,
@@ -79,7 +80,7 @@ module cache #(
     state_t state;
 
     always_comb begin
-        match = ~|((wb_adr_i ^ cache_addr) & cache_mask);
+        match = ~|((wb_adr_i ^ cache_addr_i) & cache_mask_i);
         cache_hit = 4'b0;
         wb_dat_o = mem_dat_i;
         for (int i = 0; i < SET_SIZE; i = i + 1) begin
@@ -176,6 +177,14 @@ module cache #(
                         end else begin
                             state <= READ_CACHE;
                         end
+                    end else if (fence_i) begin
+                        for (int i = 0; i < (1 << INDEX_WIDTH); i = i + 1) begin
+                            for (int j = 0; j < SET_SIZE; j = j + 1) begin
+                                valid_array[i][j] <= 1'b0;
+                            end
+                            lru_array[i] <= 0;
+                        end
+                        state <= IDLE;
                     end
                 end
                 READ_CACHE: begin

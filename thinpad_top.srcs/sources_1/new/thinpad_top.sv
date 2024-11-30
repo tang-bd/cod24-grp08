@@ -381,6 +381,8 @@ module thinpad_top (
   logic [3:0] wbc1_sel_i;
   logic wbc1_we_i;
 
+  logic fence_i;
+
   cache #(
       .DATA_WIDTH(32),
       .ADDR_WIDTH(32),
@@ -391,8 +393,9 @@ module thinpad_top (
       .clk_i(sys_clk),
       .rst_i(sys_rst),
 
-      .cache_addr(32'h8000_0000),
-      .cache_mask(32'hF000_0000),
+      .fence_i(fence_i),
+      .cache_addr_i(32'h8000_0000),
+      .cache_mask_i(32'hF000_0000),
 
       .wb_cyc_i(wbm0_cyc_i),
       .wb_stb_i(wbm0_stb_i),
@@ -423,8 +426,9 @@ module thinpad_top (
       .clk_i(sys_clk),
       .rst_i(sys_rst),
 
-      .cache_addr(32'h8000_0000),
-      .cache_mask(32'hF000_0000),
+      .fence_i(1'b0),
+      .cache_addr_i(32'h8000_0000),
+      .cache_mask_i(32'hF000_0000),
 
       .wb_cyc_i(wbm1_cyc_i),
       .wb_stb_i(wbm1_stb_i),
@@ -491,6 +495,7 @@ module thinpad_top (
   cpu cpu(
     .clk_i(sys_clk),
     .rst_i(sys_rst),
+    .fence_o(fence_i),
     .wbm0_cyc_o(wbm0_cyc_i),
     .wbm0_stb_o(wbm0_stb_i),
     .wbm0_ack_i(wbm0_ack_o),
