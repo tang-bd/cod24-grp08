@@ -81,12 +81,17 @@ module cache #(
     always_comb begin
         match = ~|((wb_adr_i ^ cache_addr) & cache_mask);
         cache_hit = 4'b0;
+        wb_dat_o = mem_dat_i;
+        for (int i = 0; i < SET_SIZE; i = i + 1) begin
+            cache_hit[i] = (tag_read[i] == addr_tag) && valid_array[addr_index][i];
+            if (cache_hit[i] && match) begin
+                wb_dat_o = data_read[i];
+            end
+        end
 
         case (state)
             IDLE: begin
                 wb_ack_o = 1'b0;
-                wb_dat_o = mem_dat_i;
-
                 if (wb_cyc_i && wb_stb_i && wb_we_i) begin
                     mem_cyc_o = wb_cyc_i;
                     mem_stb_o = wb_stb_i;
@@ -104,14 +109,6 @@ module cache #(
                 end
             end
             READ_CACHE: begin
-                wb_dat_o = mem_dat_i;
-                for (int i = 0; i < SET_SIZE; i = i + 1) begin
-                    cache_hit[i] = (tag_read[i] == addr_tag) && valid_array[addr_index][i];
-                    if (cache_hit[i] && match) begin
-                        wb_dat_o = data_read[i];
-                    end
-                end
-
                 if (cache_hit != 4'b0 && match) begin
                     wb_ack_o = 1'b1;
 
@@ -207,9 +204,7 @@ module cache #(
                 end
                 WRITE_MEM: begin
                     if (mem_ack_i) begin
-                        if (cache_hit == 4'b0 && match) begin
-                            valid_array[addr_index][lru_array[addr_index]] <= 1'b1;
-                            lru_array[addr_index] <= (lru_array[addr_index] + 1) % SET_SIZE;
+                        if (match) begin
                             data_write <= wb_dat_i;
                             for (int i = 0; i < SET_SIZE; i = i + 1) begin
                                 if (cache_hit != 4'b0) begin
@@ -221,6 +216,8 @@ module cache #(
                                         data_we[i] <= 1'b0;
                                     end
                                 end else begin
+                                    valid_array[addr_index][lru_array[addr_index]] <= 1'b1;
+                                    lru_array[addr_index] <= (lru_array[addr_index] + 1) % SET_SIZE;
                                     if (i == lru_array[addr_index]) begin
                                         tag_we[i] <= 1'b1;
                                         data_we[i] <= 1'b1;
