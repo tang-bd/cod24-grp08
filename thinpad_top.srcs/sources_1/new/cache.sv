@@ -44,6 +44,7 @@ module cache #(
     
     // Tag and Data BRAM instances
     logic [TAG_WIDTH-1:0] tag_read [SET_SIZE - 1:0];
+    logic [31:0] data_write;
     logic [31:0] data_read [SET_SIZE - 1:0];
     logic [SET_SIZE - 1:0] tag_we;
     logic [SET_SIZE - 1:0] data_we;
@@ -60,7 +61,7 @@ module cache #(
         .clka(clk_i),
         .addra(addr_index),
         .wea(data_we),
-        .dina(mem_dat_i),
+        .dina(data_write),
         .douta(data_read)
     );
     
@@ -80,23 +81,77 @@ module cache #(
     always_comb begin
         match = ~|((wb_adr_i ^ cache_addr) & cache_mask);
         cache_hit = 4'b0;
-        wb_dat_o = mem_dat_i;
-        for (int i = 0; i < SET_SIZE; i = i + 1) begin
-            cache_hit[i] = (tag_read[i] == addr_tag) && valid_array[addr_index][i];
-            if (cache_hit[i] && match) begin
-                wb_dat_o = data_read[i];
-            end
-        end
 
         case (state)
             IDLE: begin
                 wb_ack_o = 1'b0;
+                wb_dat_o = mem_dat_i;
+
+                if (wb_cyc_i && wb_stb_i && wb_we_i) begin
+                    mem_cyc_o = wb_cyc_i;
+                    mem_stb_o = wb_stb_i;
+                    mem_adr_o = wb_adr_i;
+                    mem_dat_o = wb_dat_i;
+                    mem_sel_o = 4'b1111;
+                    mem_we_o = wb_we_i;
+                end else begin
+                    mem_cyc_o = 1'b0;
+                    mem_stb_o = 1'b0;
+                    mem_we_o = 1'b0;
+                    mem_adr_o = wb_adr_i;
+                    mem_sel_o = wb_sel_i;
+                    wb_ack_o = 1'b0;
+                end
             end
             READ_CACHE: begin
-                wb_ack_o = 1'b1;
+                if (cache_hit != 4'b0 && match) begin
+                    wb_ack_o = 1'b1;
+                    for (int i = 0; i < SET_SIZE; i = i + 1) begin
+                        cache_hit[i] = (tag_read[i] == addr_tag) && valid_array[addr_index][i];
+                        if (cache_hit[i] && match) begin
+                            wb_dat_o = data_read[i];
+                        end
+                    end
+
+                    mem_cyc_o = 1'b0;
+                    mem_stb_o = 1'b0;
+                    mem_we_o = 1'b0;
+                    mem_adr_o = wb_adr_i;
+                    mem_sel_o = wb_sel_i;
+                    wb_ack_o = 1'b0;
+                end else begin
+                    wb_ack_o = 1'b0;
+                    wb_dat_o = mem_dat_i;
+
+                    mem_cyc_o = wb_cyc_i;
+                    mem_stb_o = wb_stb_i;
+                    mem_adr_o = wb_adr_i;
+                    mem_dat_o = wb_dat_i;
+                    mem_sel_o = 4'b1111;
+                    mem_we_o = wb_we_i;
+                end
             end
-            default: begin
+            READ_MEM: begin
                 wb_ack_o = mem_ack_i;
+                wb_dat_o = mem_dat_i;
+
+                mem_cyc_o = wb_cyc_i;
+                mem_stb_o = wb_stb_i;
+                mem_adr_o = wb_adr_i;
+                mem_dat_o = wb_dat_i;
+                mem_sel_o = 4'b1111;
+                mem_we_o = wb_we_i;
+            end
+            WRITE_MEM: begin
+                wb_ack_o = mem_ack_i;
+                wb_dat_o = mem_dat_i;
+
+                mem_cyc_o = wb_cyc_i;
+                mem_stb_o = wb_stb_i;
+                mem_adr_o = wb_adr_i;
+                mem_dat_o = wb_dat_i;
+                mem_sel_o = 4'b1111;
+                mem_we_o = wb_we_i;
             end
         endcase
     end
@@ -119,38 +174,24 @@ module cache #(
                     end
                     if (wb_stb_i && wb_cyc_i) begin
                         if (wb_we_i) begin
-                            mem_cyc_o = wb_cyc_i;
-                            mem_stb_o = wb_stb_i;
-                            mem_adr_o = wb_adr_i;
-                            mem_dat_o = wb_dat_i;
-                            mem_sel_o = 4'b1111;
-                            mem_we_o = wb_we_i;
                             state <= WRITE_MEM;
                         end else begin
-                            if (cache_hit == 4'b0 || !match) begin
-                                mem_cyc_o = wb_cyc_i;
-                                mem_stb_o = wb_stb_i;
-                                mem_adr_o = wb_adr_i;
-                                mem_dat_o = wb_dat_i;
-                                mem_sel_o = 4'b1111;
-                                mem_we_o = wb_we_i;
-                                state <= READ_MEM;
-                            end else begin
-                                state <= READ_CACHE;
-                            end
+                            state <= READ_CACHE;
                         end
                     end
                 end
                 READ_CACHE: begin
-                    state <= IDLE;
+                    if (cache_hit != 4'b0 && match) begin
+                        state <= IDLE;
+                    end else begin
+                        state <= READ_MEM;
+                    end
                 end
                 READ_MEM: begin
                     if (mem_ack_i) begin
-                        mem_cyc_o = 1'b0;
-                        mem_stb_o = 1'b0;
-                        mem_we_o = 1'b0;
                         valid_array[addr_index][lru_array[addr_index]] <= 1'b1;
                         lru_array[addr_index] <= (lru_array[addr_index] + 1) % SET_SIZE;
+                        data_write <= mem_dat_i;
                         for (int i = 0; i < SET_SIZE; i = i + 1) begin
                             if (i == lru_array[addr_index]) begin
                                 tag_we[i] <= 1'b1;
@@ -165,12 +206,10 @@ module cache #(
                 end
                 WRITE_MEM: begin
                     if (mem_ack_i) begin
-                        mem_cyc_o = 1'b0;
-                        mem_stb_o = 1'b0;
-                        mem_we_o = 1'b0;
                         if (cache_hit == 4'b0 && match) begin
                             valid_array[addr_index][lru_array[addr_index]] <= 1'b1;
                             lru_array[addr_index] <= (lru_array[addr_index] + 1) % SET_SIZE;
+                            data_write <= wb_dat_i;
                             for (int i = 0; i < SET_SIZE; i = i + 1) begin
                                 if (cache_hit != 4'b0) begin
                                     if (cache_hit[i]) begin
@@ -193,9 +232,6 @@ module cache #(
                         end
                         state <= IDLE;
                     end
-                end
-                default: begin
-                    state <= IDLE;
                 end
             endcase
         end

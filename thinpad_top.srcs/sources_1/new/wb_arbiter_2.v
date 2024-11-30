@@ -122,8 +122,8 @@ assign wbs_stb_o = wbm0_sel ? wbm0_stb_i :
                    wbm1_sel ? wbm1_stb_i :
                    1'b0;
 
-assign wbs_cyc_o = wbm0_sel ? 1'b1 :
-                   wbm1_sel ? 1'b1 :
+assign wbs_cyc_o = wbm0_sel ? wbm0_cyc_i :
+                   wbm1_sel ? wbm1_cyc_i :
                    1'b0;
 
 // arbiter instance
