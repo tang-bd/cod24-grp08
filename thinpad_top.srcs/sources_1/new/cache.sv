@@ -2,7 +2,7 @@ module cache #(
     parameter DATA_WIDTH = 32,
     parameter ADDR_WIDTH = 32,
     parameter TAG_WIDTH = 22,
-    parameter INDEX_WIDTH = 8,
+    parameter INDEX_WIDTH = 8, // 256 sets
     parameter OFFSET_WIDTH = 2,
     parameter SET_SIZE = 4
 )(
@@ -44,8 +44,8 @@ module cache #(
     
     // Tag and Data BRAM instances
     logic [TAG_WIDTH-1:0] tag_read [SET_SIZE - 1:0];
-    logic [31:0] data_write;
-    logic [31:0] data_read [SET_SIZE - 1:0];
+    logic [DATA_WIDTH-1:0] data_write;
+    logic [DATA_WIDTH-1:0] data_read [SET_SIZE - 1:0];
     logic [SET_SIZE - 1:0] tag_we;
     logic [SET_SIZE - 1:0] data_we;
     
@@ -100,28 +100,29 @@ module cache #(
                     mem_we_o = 1'b0;
                     mem_adr_o = wb_adr_i;
                     mem_sel_o = wb_sel_i;
-                    wb_ack_o = 1'b0;
+                    mem_we_o = wb_we_i;
                 end
             end
             READ_CACHE: begin
+                wb_dat_o = mem_dat_i;
+                for (int i = 0; i < SET_SIZE; i = i + 1) begin
+                    cache_hit[i] = (tag_read[i] == addr_tag) && valid_array[addr_index][i];
+                    if (cache_hit[i] && match) begin
+                        wb_dat_o = data_read[i];
+                    end
+                end
+
                 if (cache_hit != 4'b0 && match) begin
                     wb_ack_o = 1'b1;
-                    for (int i = 0; i < SET_SIZE; i = i + 1) begin
-                        cache_hit[i] = (tag_read[i] == addr_tag) && valid_array[addr_index][i];
-                        if (cache_hit[i] && match) begin
-                            wb_dat_o = data_read[i];
-                        end
-                    end
 
                     mem_cyc_o = 1'b0;
                     mem_stb_o = 1'b0;
                     mem_we_o = 1'b0;
                     mem_adr_o = wb_adr_i;
                     mem_sel_o = wb_sel_i;
-                    wb_ack_o = 1'b0;
+                    mem_we_o = wb_we_i;
                 end else begin
                     wb_ack_o = 1'b0;
-                    wb_dat_o = mem_dat_i;
 
                     mem_cyc_o = wb_cyc_i;
                     mem_stb_o = wb_stb_i;
@@ -193,7 +194,7 @@ module cache #(
                         lru_array[addr_index] <= (lru_array[addr_index] + 1) % SET_SIZE;
                         data_write <= mem_dat_i;
                         for (int i = 0; i < SET_SIZE; i = i + 1) begin
-                            if (i == lru_array[addr_index]) begin
+                            if (i == lru_array[addr_index] && match) begin
                                 tag_we[i] <= 1'b1;
                                 data_we[i] <= 1'b1;
                             end else begin
