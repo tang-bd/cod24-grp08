@@ -1,4 +1,6 @@
 module controller(
+    input wire wbm0_cyc_i,
+    input wire wbm0_stb_i,
     input wire wbm0_ack_i,
     input wire wbm1_cyc_i,
     input wire wbm1_stb_i,
@@ -24,7 +26,11 @@ module controller(
     output reg bubble_mem_wb_o
 );
     always_comb begin
-        if ((!wbm1_cyc_i && !wbm1_stb_i && !wbm0_ack_i) || (wbm1_cyc_i && wbm1_stb_i && !wbm1_ack_i)) begin // wishbone stall
+        if (
+            (!wbm0_cyc_i && !wbm0_stb_i && !wbm0_ack_i && !wbm1_cyc_i && !wbm1_stb_i && !wbm1_ack_i) || // IF idle, MEM idle (IF transition)
+            (wbm0_cyc_i && wbm0_stb_i && !wbm0_ack_i) || // IF busy
+            (wbm1_cyc_i && wbm1_stb_i && !wbm1_ack_i) // MEM busy
+        ) begin // wishbone stall
             stall_if_id_o=1'b1;
             bubble_if_id_o=1'b0;
 

@@ -5,14 +5,24 @@ module cpu (
     input wire rst_i,
 
     // wishbone
-    output reg wb_cyc_o,
-    output reg wb_stb_o,
-    input wire wb_ack_i,
-    output reg [31:0] wb_adr_o,
-    output reg [31:0] wb_dat_o,
-    input wire [31:0] wb_dat_i,
-    output reg [3:0] wb_sel_o,
-    output reg wb_we_o,
+    output reg fence_o,
+    output reg wbm0_cyc_o,
+    output reg wbm0_stb_o,
+    input wire wbm0_ack_i,
+    output reg [31:0] wbm0_adr_o,
+    output reg [31:0] wbm0_dat_o,
+    input wire [31:0] wbm0_dat_i,
+    output reg [3:0] wbm0_sel_o,
+    output reg wbm0_we_o,
+
+    output reg wbm1_cyc_o,
+    output reg wbm1_stb_o,
+    input wire wbm1_ack_i,
+    output reg [31:0] wbm1_adr_o,
+    output reg [31:0] wbm1_dat_o,
+    input wire [31:0] wbm1_dat_i,
+    output reg [3:0] wbm1_sel_o,
+    output reg wbm1_we_o,
 
     // rf
     output reg [4:0] rf_raddr_a_o,
@@ -37,11 +47,6 @@ module cpu (
     logic [31:0] jump_addr;
     logic jump;
 
-    logic wbm0_cyc_i, wbm0_stb_i, wbm0_ack_o;
-    logic [31:0] wbm0_adr_i, wbm0_dat_i, wbm0_dat_o;
-    logic [3:0] wbm0_sel_i;
-    logic wbm0_we_i;
-
     logic stall_if_id, bubble_if_id;
 
     logic [31:0] pc_if_id, inst_if_id;
@@ -59,14 +64,14 @@ module cpu (
         .rf_raddr_a_o(rf_raddr_a_if_id),
         .rf_raddr_b_o(rf_raddr_b_if_id),
 
-        .wb_cyc_o(wbm0_cyc_i),
-        .wb_stb_o(wbm0_stb_i),
-        .wb_ack_i(wbm0_ack_o),
-        .wb_adr_o(wbm0_adr_i),
-        .wb_dat_o(wbm0_dat_i),
-        .wb_dat_i(wbm0_dat_o),
-        .wb_sel_o(wbm0_sel_i),
-        .wb_we_o(wbm0_we_i)
+        .wb_cyc_o(wbm0_cyc_o),
+        .wb_stb_o(wbm0_stb_o),
+        .wb_ack_i(wbm0_ack_i),
+        .wb_adr_o(wbm0_adr_o),
+        .wb_dat_o(wbm0_dat_o),
+        .wb_dat_i(wbm0_dat_i),
+        .wb_sel_o(wbm0_sel_o),
+        .wb_we_o(wbm0_we_o)
     );
 
     logic stall_id_ex, bubble_id_ex;
@@ -152,11 +157,6 @@ module cpu (
         .inst_type_o(inst_type_ex_mem)
     );
 
-    logic wbm1_cyc_i, wbm1_stb_i, wbm1_ack_o;
-    logic [31:0] wbm1_adr_i, wbm1_dat_i, wbm1_dat_o;
-    logic [3:0] wbm1_sel_i;
-    logic wbm1_we_i;
-
     MEM MEM(
         .clk_i(clk_i),
         .rst_i(rst_i),
@@ -169,14 +169,15 @@ module cpu (
         .rf_wdata_o(rf_wdata_mem),
         .rf_we_o(rf_we_mem),
 
-        .wb_cyc_o(wbm1_cyc_i),
-        .wb_stb_o(wbm1_stb_i),
-        .wb_ack_i(wbm1_ack_o),
-        .wb_adr_o(wbm1_adr_i),
-        .wb_dat_o(wbm1_dat_i),
-        .wb_dat_i(wbm1_dat_o),
-        .wb_sel_o(wbm1_sel_i),
-        .wb_we_o(wbm1_we_i)
+        .fence_o(fence_o),
+        .wb_cyc_o(wbm1_cyc_o),
+        .wb_stb_o(wbm1_stb_o),
+        .wb_ack_i(wbm1_ack_i),
+        .wb_adr_o(wbm1_adr_o),
+        .wb_dat_o(wbm1_dat_o),
+        .wb_dat_i(wbm1_dat_i),
+        .wb_sel_o(wbm1_sel_o),
+        .wb_we_o(wbm1_we_o)
     );
 
     logic stall_mem_wb, bubble_mem_wb;
@@ -204,10 +205,12 @@ module cpu (
     );
 
     controller controller(
-        .wbm0_ack_i(wbm0_ack_o),
-        .wbm1_cyc_i(wbm1_cyc_i),
-        .wbm1_stb_i(wbm1_stb_i),
-        .wbm1_ack_i(wbm1_ack_o),
+        .wbm0_cyc_i(wbm0_cyc_o),
+        .wbm0_stb_i(wbm0_stb_o),
+        .wbm0_ack_i(wbm0_ack_i),
+        .wbm1_cyc_i(wbm1_cyc_o),
+        .wbm1_stb_i(wbm1_stb_o),
+        .wbm1_ack_i(wbm1_ack_i),
         .jump_i(jump),
         .rf_raddr_a_if_id_i(rf_raddr_a_if_id),
         .rf_raddr_b_if_id_i(rf_raddr_b_if_id),
@@ -221,38 +224,5 @@ module cpu (
         .bubble_ex_mem_o(bubble_ex_mem),
         .stall_mem_wb_o(stall_mem_wb),
         .bubble_mem_wb_o(bubble_mem_wb)
-    );
-
-    wb_arbiter_2 arbiter(
-        .clk(clk_i),
-        .rst(rst_i),
-        .wbm0_cyc_i(wbm0_cyc_i),
-        .wbm0_stb_i(wbm0_stb_i),
-        .wbm0_ack_o(wbm0_ack_o),
-        .wbm0_adr_i(wbm0_adr_i),
-        .wbm0_dat_i(wbm0_dat_i),
-        .wbm0_dat_o(wbm0_dat_o),
-        .wbm0_sel_i(wbm0_sel_i),
-        .wbm0_we_i(wbm0_we_i),
-        .wbm0_err_o(),
-        .wbm0_rty_o(),
-        .wbm1_cyc_i(wbm1_cyc_i),
-        .wbm1_stb_i(wbm1_stb_i),
-        .wbm1_ack_o(wbm1_ack_o),
-        .wbm1_adr_i(wbm1_adr_i),
-        .wbm1_dat_i(wbm1_dat_i),
-        .wbm1_dat_o(wbm1_dat_o),
-        .wbm1_sel_i(wbm1_sel_i),
-        .wbm1_we_i(wbm1_we_i),
-        .wbm1_err_o(),
-        .wbm1_rty_o(),
-        .wbs_cyc_o(wb_cyc_o),
-        .wbs_stb_o(wb_stb_o),
-        .wbs_ack_i(wb_ack_i),
-        .wbs_adr_o(wb_adr_o),
-        .wbs_dat_o(wb_dat_o),
-        .wbs_dat_i(wb_dat_i),
-        .wbs_sel_o(wb_sel_o),
-        .wbs_we_o(wb_we_o)
     );
 endmodule
