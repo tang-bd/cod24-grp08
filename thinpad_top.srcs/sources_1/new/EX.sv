@@ -186,6 +186,30 @@ module EX(
                         csr_wdata_o = rf_rdata_a;
                         csr_we_o = 1;
                     end
+                    CSRRS: begin
+                        jump_o = 0;
+                        jump_addr_o = pc_i;
+                        alu_op_o = ALU_ADD;
+                        alu_a_o = csr_rdata;
+                        alu_b_o = 0;
+
+                        csr_raddr_o = imm_gen_data_i;
+                        csr_waddr_o = imm_gen_data_i;
+                        csr_wdata_o = csr_rdata | rf_rdata_a;
+                        csr_we_o = 1;
+                    end
+                    CSRRC: begin
+                        jump_o = 0;
+                        jump_addr_o = pc_i;
+                        alu_op_o = ALU_ADD;
+                        alu_a_o = csr_rdata;
+                        alu_b_o = 0;
+
+                        csr_raddr_o = imm_gen_data_i;
+                        csr_waddr_o = imm_gen_data_i;
+                        csr_wdata_o = csr_rdata & ~rf_rdata_a;
+                        csr_we_o = 1;
+                    end
                     default: begin
                         jump_o = 0;
                         jump_addr_o = pc_i;

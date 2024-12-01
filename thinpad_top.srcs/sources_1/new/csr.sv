@@ -5,9 +5,10 @@ module csr(
     input wire [11:0] csr_raddr,
     input reg [31:0] csr_rdata,
     input wire [11:0] csr_waddr,
-    output reg [31:0] csr_wdata,
+    input reg [31:0] csr_wdata,
     input wire csr_we,
 
+    output reg [31:0] mstatus_o,
     output reg [31:0] satp_o
 );
 
@@ -20,6 +21,9 @@ module csr(
                     12'h180: begin
                         satp_o <= csr_wdata;
                     end
+                    12'h300: begin
+                        mstatus_o <= csr_wdata;
+                    end
                 endcase
             end
         end
@@ -29,6 +33,9 @@ module csr(
         case (csr_raddr)
             12'h180: begin
                 csr_rdata = satp_o;
+            end
+            12'h300: begin
+                csr_rdata = mstatus_o;
             end
             default: begin
                 csr_rdata = 32'h0000_0000;
