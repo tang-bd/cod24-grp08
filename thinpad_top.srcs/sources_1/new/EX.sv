@@ -309,9 +309,15 @@ module EX(
                 csr_rdata <= 0;
             end else begin
                 case (inst_op_i)
-                CSRRW: begin
-                    csr_rdata <= csr_rdata_i;
-                end
+                    CSRRW: begin
+                        csr_rdata <= csr_rdata_i;
+                    end
+                    CSRRS: begin
+                        csr_rdata <= csr_rdata_i;
+                    end
+                    CSRRC: begin
+                        csr_rdata <= csr_rdata_i;
+                    end
                 endcase
             end
         end

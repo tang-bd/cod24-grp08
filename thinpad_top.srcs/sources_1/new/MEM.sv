@@ -7,7 +7,7 @@ module MEM(
     input wire [2:0] inst_type_i,
     input wire [31:0] alu_y_i,
     input wire [31:0] rf_rdata_b_i,
-    
+
     output reg [31:0] rf_wdata_o,
     output reg rf_we_o,
 
@@ -210,11 +210,11 @@ module MEM(
             end
         endcase
 
-            if (data_ready) begin
-                wb_cyc_o = 0;
-                wb_stb_o = 0;
-                wb_we_o = 0;
-            end
+        if (data_ready) begin
+            wb_cyc_o = 0;
+            wb_stb_o = 0;
+            wb_we_o = 0;
+        end
     end
 
     always_ff @(posedge clk_i) begin

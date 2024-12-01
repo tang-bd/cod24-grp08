@@ -15,6 +15,7 @@ module csr(
     always_ff @(posedge clk_i) begin
         if (rst_i) begin
             satp_o <= 32'h0000_0000;
+            mstatus_o <= 32'h0000_0000;
         end else begin
             if (csr_we) begin
                 case (csr_waddr)
