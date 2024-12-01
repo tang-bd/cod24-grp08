@@ -61,7 +61,7 @@ module tb;
     #100;
     reset_btn = 0;
 
-    #7000000;
+    #5000000;
     $display("Start testing");
 
     uart.pc_send_byte(8'h57);  // 'W'

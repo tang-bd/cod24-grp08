@@ -6,6 +6,7 @@ module controller(
     input wire wbm1_stb_i,
     input wire wbm1_ack_i,
 
+    input wire stall_mem_i,
     input wire jump_i,
 
     input wire [4:0] rf_raddr_a_if_id_i,
@@ -27,9 +28,8 @@ module controller(
 );
     always_comb begin
         if (
-            (!wbm0_cyc_i && !wbm0_stb_i && !wbm0_ack_i && !wbm1_cyc_i && !wbm1_stb_i && !wbm1_ack_i) || // IF idle, MEM idle (IF transition)
-            (wbm0_cyc_i && wbm0_stb_i && !wbm0_ack_i) || // IF busy
-            (wbm1_cyc_i && wbm1_stb_i && !wbm1_ack_i) // MEM busy
+            (wbm0_cyc_i && wbm0_stb_i) || // IF busy
+            (wbm1_cyc_i && wbm1_stb_i) // MEM busy
         ) begin // wishbone stall
             stall_if_id_o=1'b1;
             bubble_if_id_o=1'b0;
@@ -41,8 +41,8 @@ module controller(
             stall_ex_mem_o=1'b1;
             bubble_ex_mem_o=1'b0;
 
-            stall_mem_wb_o=1'b0;
-            bubble_mem_wb_o=1'b1;
+            stall_mem_wb_o=1'b1;
+            bubble_mem_wb_o=1'b0;
         end else if (jump_i) begin // jump
             stall_if_id_o=1'b0;
             bubble_if_id_o=1'b1;

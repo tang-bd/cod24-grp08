@@ -52,8 +52,9 @@ module mmu #(
     wire [TLB_OFFSET_WIDTH - 1:0] addr_tlb_offset = wb_adr_i[TLB_OFFSET_WIDTH - 1:0];
 
     // satp breakdown
-    wire satp_mode = satp_i[ADDR_WIDTH - 1];
-    wire [PPN_WIDTH - 1:0] satp_ppn = satp_i[PPN_WIDTH - 1:0];
+    logic [DATA_WIDTH - 1:0] satp_reg;
+    wire satp_mode = satp_reg[ADDR_WIDTH - 1];
+    wire [PPN_WIDTH - 1:0] satp_ppn = satp_reg[PPN_WIDTH - 1:0];
 
     logic [DATA_WIDTH - 1:0] pte_data;
     wire [PPN_WIDTH - 1:0] pte_ppn = pte_data[DATA_WIDTH - 3:DATA_WIDTH - PPN_WIDTH - 2];
@@ -169,6 +170,7 @@ module mmu #(
 
     always_ff @(posedge clk_i) begin
         if (rst_i) begin
+            satp_reg <= satp_i;
             pte_data <= 0;
             pte_index <= 1;
             for (int i = 0; i < 1 << TLB_INDEX_WIDTH; i = i + 1) begin
@@ -183,6 +185,7 @@ module mmu #(
         end else begin
             case (state)
                 IDLE: begin
+                    satp_reg <= satp_i;
                     if (wb_cyc_i && wb_stb_i) begin
                         if (!(satp_mode && match)) begin
                             state <= TRANSLATE;
@@ -227,6 +230,7 @@ module mmu #(
                 end
                 TRANSLATE: begin
                     if (mem_ack_i) begin
+                        satp_reg <= satp_i;
                         pte_index <= 1;
                         state <= IDLE;
                     end
