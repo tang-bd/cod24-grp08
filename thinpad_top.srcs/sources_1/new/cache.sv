@@ -138,7 +138,6 @@ module cache #(
             end
             READ_MEM: begin
                 wb_ack_o = mem_ack_i;
-                wb_dat_o = mem_dat_i;
 
                 mem_cyc_o = wb_cyc_i;
                 mem_stb_o = wb_stb_i;
