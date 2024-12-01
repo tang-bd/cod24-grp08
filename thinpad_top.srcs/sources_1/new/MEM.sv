@@ -27,27 +27,6 @@ module MEM(
         case (inst_type_i)
             R_TYPE: begin
                 rf_we_o = 1;
-            end
-            I_TYPE: begin
-                case (inst_op_i)
-                    FENCE_I: begin
-                        rf_we_o = 0;
-                    end
-                    default: begin
-                        rf_we_o = 1;
-                    end
-                endcase
-            end
-            U_TYPE: begin
-                rf_we_o = 1;
-            end
-            default: begin
-                rf_we_o = 0;
-            end
-        endcase
-
-        case (inst_type_i)
-            R_TYPE: begin
                 fence_o = 0;
                 wb_cyc_o = 0;
                 wb_stb_o = 0;
@@ -59,6 +38,7 @@ module MEM(
             I_TYPE: begin
                 case (inst_op_i)
                     ADDI: begin
+                        rf_we_o = 1;
                         fence_o = 0;
                         wb_cyc_o = 0;
                         wb_stb_o = 0;
@@ -68,6 +48,7 @@ module MEM(
                         wb_we_o = 0;
                     end
                     ANDI: begin
+                        rf_we_o = 1;
                         fence_o = 0;
                         wb_cyc_o = 0;
                         wb_stb_o = 0;
@@ -77,6 +58,7 @@ module MEM(
                         wb_we_o = 0;
                     end
                     ORI: begin
+                        rf_we_o = 1;
                         fence_o = 0;
                         wb_cyc_o = 0;
                         wb_stb_o = 0;
@@ -86,6 +68,7 @@ module MEM(
                         wb_we_o = 0;
                     end
                     SLLI: begin
+                        rf_we_o = 1;
                         fence_o = 0;
                         wb_cyc_o = 0;
                         wb_stb_o = 0;
@@ -95,6 +78,7 @@ module MEM(
                         wb_we_o = 0;
                     end
                     SRLI: begin
+                        rf_we_o = 1;
                         fence_o = 0;
                         wb_cyc_o = 0;
                         wb_stb_o = 0;
@@ -104,6 +88,7 @@ module MEM(
                         wb_we_o = 0;
                     end
                     LB: begin
+                        rf_we_o = 1;
                         fence_o = 0;
                         wb_cyc_o = 1;
                         wb_stb_o = 1;
@@ -113,6 +98,7 @@ module MEM(
                         wb_we_o = 0;
                     end
                     LW: begin
+                        rf_we_o = 1;
                         fence_o = 0;
                         wb_cyc_o = 1;
                         wb_stb_o = 1;
@@ -122,6 +108,7 @@ module MEM(
                         wb_we_o = 0;
                     end
                     JALR: begin
+                        rf_we_o = 1;
                         fence_o = 0;
                         wb_cyc_o = 0;
                         wb_stb_o = 0;
@@ -131,6 +118,7 @@ module MEM(
                         wb_we_o = 0;
                     end
                     FENCE_I: begin
+                        rf_we_o = 0;
                         fence_o = 1;
                         wb_cyc_o = 0;
                         wb_stb_o = 0;
@@ -140,6 +128,7 @@ module MEM(
                         wb_we_o = 0;
                     end
                     default: begin
+                        rf_we_o = 0;
                         fence_o = 0;
                         wb_cyc_o = 0;
                         wb_stb_o = 0;
@@ -153,6 +142,7 @@ module MEM(
             S_TYPE: begin
                 case (inst_op_i)
                     SB: begin
+                        rf_we_o = 0;
                         fence_o = 0;
                         wb_cyc_o = 1;
                         wb_stb_o = 1;
@@ -162,6 +152,7 @@ module MEM(
                         wb_we_o = 1;
                     end
                     SW: begin
+                        rf_we_o = 0;
                         fence_o = 0;
                         wb_cyc_o = 1;
                         wb_stb_o = 1;
@@ -171,6 +162,7 @@ module MEM(
                         wb_we_o = 1;
                     end
                     default: begin
+                        rf_we_o = 0;
                         fence_o = 0;
                         wb_cyc_o = 0;
                         wb_stb_o = 0;
@@ -182,6 +174,7 @@ module MEM(
                 endcase
             end
             B_TYPE: begin
+                rf_we_o = 0;
                 fence_o = 0;
                 wb_cyc_o = 0;
                 wb_stb_o = 0;
@@ -191,6 +184,7 @@ module MEM(
                 wb_we_o = 0;
             end
             U_TYPE: begin
+                rf_we_o = 1;
                 fence_o = 0;
                 wb_cyc_o = 0;
                 wb_stb_o = 0;
@@ -200,6 +194,7 @@ module MEM(
                 wb_we_o = 0;
             end
             default: begin
+                rf_we_o = 0;
                 fence_o = 0;
                 wb_cyc_o = 0;
                 wb_stb_o = 0;
