@@ -183,8 +183,6 @@ module cache #(
                                 data_we[i] = 1'b0;
                             end
                         end else begin
-                            valid_array[addr_index][lru_array[addr_index]] = 1'b1;
-                            lru_array[addr_index] = (lru_array[addr_index] + 1) % SET_SIZE;
                             if (i == lru_array[addr_index]) begin
                                 tag_we[i] = 1'b1;
                                 data_we[i] = 1'b1;
