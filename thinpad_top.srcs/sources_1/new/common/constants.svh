@@ -43,7 +43,8 @@ typedef enum logic [4:0] {
     SW = 17,
     XOR = 18,
     FENCE_I = 19,
-    UNKNOWN_INST_OP = 20
+    CSRRW = 20,
+    UNKNOWN_INST_OP = 21
 } inst_op_t;
 
 `endif

@@ -11,8 +11,8 @@ module cache #(
     input wire rst_i,
 
     input wire fence_i,
-    input wire [31:0] cache_addr_i,
-    input wire [31:0] cache_mask_i,
+    input wire [31:0] uart_addr_i,
+    input wire [31:0] uart_mask_i,
 
     // wishbone slave interface
     input wire wb_cyc_i,
@@ -80,7 +80,7 @@ module cache #(
     state_t state;
 
     always_comb begin
-        match = ~|((wb_adr_i ^ cache_addr_i) & cache_mask_i);
+        match = !(~|((wb_adr_i ^ uart_addr_i) & uart_mask_i));
         cache_hit = 4'b0;
         wb_dat_o = mem_dat_i;
         for (int i = 0; i < SET_SIZE; i = i + 1) begin

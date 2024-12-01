@@ -33,6 +33,13 @@ module cpu (
     output reg [31:0] rf_wdata_o,
     output reg rf_we_o,
 
+    // csr
+    output reg [11:0] csr_raddr_o,
+    input wire [31:0] csr_rdata_i,
+    output reg [11:0] csr_waddr_o,
+    output reg [31:0] csr_wdata_o,
+    output reg csr_we_o,
+
     // alu
     output reg [31:0] alu_a_o,
     output reg [31:0] alu_b_o,
@@ -127,6 +134,12 @@ module cpu (
         .rf_waddr_i(rf_waddr_o),
         .rf_wdata_i(rf_wdata_o),
         .rf_we_i(rf_we_o),
+
+        .csr_raddr_o(csr_raddr_o),
+        .csr_rdata_i(csr_rdata_i),
+        .csr_waddr_o(csr_waddr_o),
+        .csr_wdata_o(csr_wdata_o),
+        .csr_we_o(csr_we_o),
 
         .jump_o(jump),
         .jump_addr_o(jump_addr),

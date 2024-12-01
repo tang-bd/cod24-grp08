@@ -61,6 +61,13 @@ module ID_EX(
                 inst_type_o = I_TYPE;
                 inst_op_o = FENCE_I;
             end
+            7'b1110011: begin
+                inst_type_o = I_TYPE;
+                case (inst_reg[14:12])
+                    3'b001: inst_op_o = CSRRW;
+                    default: inst_op_o = UNKNOWN_INST_OP;
+                endcase
+            end
             7'b0100011: begin
                 inst_type_o = S_TYPE;
                 case(inst_reg[14:12])
