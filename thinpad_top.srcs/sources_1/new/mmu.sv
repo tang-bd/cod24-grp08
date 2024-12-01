@@ -137,7 +137,7 @@ module mmu #(
 
     always_ff @(posedge clk_i) begin
         if (rst_i) begin
-            satp_reg <= satp_i;
+            satp_reg <= 32'h0;
             pte_data <= 0;
             pte_index <= 1;
             state <= IDLE;

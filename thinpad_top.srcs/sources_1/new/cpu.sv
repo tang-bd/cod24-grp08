@@ -235,10 +235,8 @@ module cpu (
     controller controller(
         .wbm0_cyc_i(wbm0_cyc_o),
         .wbm0_stb_i(wbm0_stb_o),
-        .wbm0_ack_i(wbm0_ack_i),
         .wbm1_cyc_i(wbm1_cyc_o),
         .wbm1_stb_i(wbm1_stb_o),
-        .wbm1_ack_i(wbm1_ack_i),
         .jump_i(jump),
         .rf_raddr_a_if_id_i(rf_raddr_a_if_id),
         .rf_raddr_b_if_id_i(rf_raddr_b_if_id),

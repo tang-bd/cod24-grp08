@@ -1,10 +1,8 @@
 module controller(
     input wire wbm0_cyc_i,
     input wire wbm0_stb_i,
-    input wire wbm0_ack_i,
     input wire wbm1_cyc_i,
     input wire wbm1_stb_i,
-    input wire wbm1_ack_i,
 
     input wire jump_i,
 

@@ -19,7 +19,6 @@ module IF(
     output reg wb_we_o
 );
     logic [31:0] pc_reg;
-    logic [31:0] inst_reg;
 
     typedef enum logic {
         IDLE = 0,
@@ -30,7 +29,6 @@ module IF(
     always_ff @(posedge clk_i) begin
         if (rst_i) begin
             pc_reg <= 32'h80000000;
-            inst_reg <= 32'h0;
             pc_o <= 32'h0;
             inst_o <= 32'h0;
             state <= IDLE;
@@ -63,17 +61,10 @@ module IF(
                     if (wb_ack_i) begin
                         wb_cyc_o <= 0;
                         wb_stb_o <= 0;
-                        if (bubble_i) begin
-                            pc_o <= 32'h0;
-                            inst_o <= 32'h0;
-                            pc_reg <= jump_addr_i;
-                            state <= IDLE;
-                        end else begin
-                            pc_o <= pc_reg;
-                            inst_o <= wb_dat_i;
-                            pc_reg <= pc_reg + 4;
-                            state <= IDLE;
-                        end
+                        pc_o <= pc_reg;
+                        inst_o <= wb_dat_i;
+                        pc_reg <= pc_reg + 4;
+                        state <= IDLE;
                     end
                 end
             endcase
