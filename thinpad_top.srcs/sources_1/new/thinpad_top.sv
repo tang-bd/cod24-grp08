@@ -386,6 +386,16 @@ module thinpad_top (
 
   /* =========== MMU begin =========== */
 
+  logic wbm0_cyc_i, wbm0_stb_i, wbm0_ack_o;
+  logic [31:0] wbm0_adr_i, wbm0_dat_i, wbm0_dat_o;
+  logic [3:0] wbm0_sel_i;
+  logic wbm0_we_i;
+
+  logic wbm1_cyc_i, wbm1_stb_i, wbm1_ack_o;
+  logic [31:0] wbm1_adr_i, wbm1_dat_i, wbm1_dat_o;
+  logic [3:0] wbm1_sel_i;
+  logic wbm1_we_i;
+
   logic wbp0_cyc_i, wbp0_stb_i, wbp0_ack_o;
   logic [31:0] wbp0_adr_i, wbp0_dat_i, wbp0_dat_o;
   logic [3:0] wbp0_sel_i;
@@ -453,16 +463,6 @@ module thinpad_top (
   /* =========== MMU end =========== */
 
   /* =========== Cache begin =========== */
-
-  logic wbm0_cyc_i, wbm0_stb_i, wbm0_ack_o;
-  logic [31:0] wbm0_adr_i, wbm0_dat_i, wbm0_dat_o;
-  logic [3:0] wbm0_sel_i;
-  logic wbm0_we_i;
-
-  logic wbm1_cyc_i, wbm1_stb_i, wbm1_ack_o;
-  logic [31:0] wbm1_adr_i, wbm1_dat_i, wbm1_dat_o;
-  logic [3:0] wbm1_sel_i;
-  logic wbm1_we_i;
 
   logic wbc0_cyc_i, wbc0_stb_i, wbc0_ack_o;
   logic [31:0] wbc0_adr_i, wbc0_dat_i, wbc0_dat_o;
