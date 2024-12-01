@@ -6,7 +6,6 @@ module controller(
     input wire wbm1_stb_i,
     input wire wbm1_ack_i,
 
-    input wire stall_mem_i,
     input wire jump_i,
 
     input wire [4:0] rf_raddr_a_if_id_i,

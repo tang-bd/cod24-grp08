@@ -121,7 +121,6 @@ module cpu (
         .read_mem_o(read_mem_id_ex)
     );
 
-    logic stall_mem;
     logic [31:0] rf_wdata_mem;
     logic rf_we_mem;
 
@@ -199,8 +198,6 @@ module cpu (
         .alu_y_i(alu_y_ex_mem),
         .rf_rdata_b_i(rf_rdata_b_ex_mem),
 
-        .stall_o(stall_mem),
-
         .rf_wdata_o(rf_wdata_mem),
         .rf_we_o(rf_we_mem),
 
@@ -242,7 +239,6 @@ module cpu (
         .wbm1_cyc_i(wbm1_cyc_o),
         .wbm1_stb_i(wbm1_stb_o),
         .wbm1_ack_i(wbm1_ack_i),
-        .stall_mem_i(stall_mem),
         .jump_i(jump),
         .rf_raddr_a_if_id_i(rf_raddr_a_if_id),
         .rf_raddr_b_if_id_i(rf_raddr_b_if_id),

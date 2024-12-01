@@ -83,6 +83,7 @@ module cache #(
         match = !(~|((wb_adr_i ^ uart_addr_i) & uart_mask_i));
         cache_hit = 4'b0;
         wb_dat_o = mem_dat_i;
+        mem_dat_o = wb_dat_i;
         for (int i = 0; i < SET_SIZE; i = i + 1) begin
             cache_hit[i] = (tag_read[i] == addr_tag) && valid_array[addr_index][i];
             if (cache_hit[i] && match) begin
@@ -103,7 +104,6 @@ module cache #(
                     mem_cyc_o = wb_cyc_i;
                     mem_stb_o = wb_stb_i;
                     mem_adr_o = wb_adr_i;
-                    mem_dat_o = wb_dat_i;
                     mem_sel_o = 4'b1111;
                     mem_we_o = wb_we_i;
                 end else begin
@@ -131,7 +131,6 @@ module cache #(
                     mem_cyc_o = wb_cyc_i;
                     mem_stb_o = wb_stb_i;
                     mem_adr_o = wb_adr_i;
-                    mem_dat_o = wb_dat_i;
                     mem_sel_o = 4'b1111;
                     mem_we_o = wb_we_i;
                 end
@@ -142,7 +141,6 @@ module cache #(
                 mem_cyc_o = wb_cyc_i;
                 mem_stb_o = wb_stb_i;
                 mem_adr_o = wb_adr_i;
-                mem_dat_o = wb_dat_i;
                 mem_sel_o = 4'b1111;
                 mem_we_o = wb_we_i;
 
@@ -166,7 +164,6 @@ module cache #(
                 mem_cyc_o = wb_cyc_i;
                 mem_stb_o = wb_stb_i;
                 mem_adr_o = wb_adr_i;
-                mem_dat_o = wb_dat_i;
                 mem_sel_o = 4'b1111;
                 mem_we_o = wb_we_i;
 

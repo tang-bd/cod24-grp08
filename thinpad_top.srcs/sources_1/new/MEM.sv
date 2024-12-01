@@ -7,8 +7,7 @@ module MEM(
     input wire [2:0] inst_type_i,
     input wire [31:0] alu_y_i,
     input wire [31:0] rf_rdata_b_i,
-
-    output reg stall_o,
+    
     output reg [31:0] rf_wdata_o,
     output reg rf_we_o,
 
@@ -44,28 +43,6 @@ module MEM(
             end
             default: begin
                 rf_we_o = 0;
-            end
-        endcase
-
-        case (inst_type_i)
-            I_TYPE: begin
-                case (inst_op_i)
-                    LB: begin
-                        stall_o = !data_ready;
-                    end
-                    LW: begin
-                        stall_o = !data_ready;
-                    end
-                    default: begin
-                        stall_o = 0;
-                    end
-                endcase
-            end
-            S_TYPE: begin
-                stall_o = !data_ready;
-            end
-            default: begin
-                stall_o = 0;
             end
         endcase
 
