@@ -191,14 +191,14 @@ module thinpad_top (
       .clk_i(sys_clk),
       .rst_i(sys_rst),
 
-      .wb_cyc_i(wbs3_cyc_o),
-      .wb_stb_i(wbs3_stb_o),
-      .wb_ack_o(wbs3_ack_i),
-      .wb_adr_i(wbs3_adr_o),
-      .wb_dat_i(wbs3_dat_o),
-      .wb_dat_o(wbs3_dat_i),
-      .wb_sel_i(wbs3_sel_o),
-      .wb_we_i (wbs3_we_o),
+      .wb_cyc_i(wbs2_cyc_o),
+      .wb_stb_i(wbs2_stb_o),
+      .wb_ack_o(wbs2_ack_i),
+      .wb_adr_i(wbs2_adr_o),
+      .wb_dat_i(wbs2_dat_o),
+      .wb_dat_o(wbs2_dat_i),
+      .wb_sel_i(wbs2_sel_o),
+      .wb_we_i (wbs2_we_o),
 
       // to UART pins
       .uart_txd_o(txd),
@@ -341,14 +341,14 @@ module thinpad_top (
 
       .satp_i(satp),
 
-      .wb_cyc_i(wbs2_cyc_o),
-      .wb_stb_i(wbs2_stb_o),
-      .wb_ack_o(wbs2_ack_i),
-      .wb_adr_i(wbs2_adr_o),
-      .wb_dat_i(wbs2_dat_o),
-      .wb_dat_o(wbs2_dat_i),
-      .wb_sel_i(wbs2_sel_o),
-      .wb_we_i(wbs2_we_o),
+      .wb_cyc_i(wbs3_cyc_o),
+      .wb_stb_i(wbs3_stb_o),
+      .wb_ack_o(wbs3_ack_i),
+      .wb_adr_i(wbs3_adr_o),
+      .wb_dat_i(wbs3_dat_o),
+      .wb_dat_o(wbs3_dat_i),
+      .wb_sel_i(wbs3_sel_o),
+      .wb_we_i(wbs3_we_o),
 
       .mem_cyc_o(wbp1_cyc_i),
       .mem_stb_o(wbp1_stb_i),
@@ -531,8 +531,8 @@ module thinpad_top (
     .wbm_rty_o(),
     .wbm_cyc_i(wbm1_cyc_i),
 
-    // Slave interface 0 (to SRAM controller)
-    .wbs0_addr    (32'h8000_0000),
+    // Slave interface 0 (to UART controller)
+    .wbs0_addr    (32'h1000_0000),
     .wbs0_addr_msk(32'hF000_0000),
 
     .wbs0_adr_o(wbs2_adr_o),
@@ -546,9 +546,9 @@ module thinpad_top (
     .wbs0_rty_i('0),
     .wbs0_cyc_o(wbs2_cyc_o),
 
-    // Slave interface 1 (to UART controller)
-    .wbs1_addr    (32'h1000_0000),
-    .wbs1_addr_msk(32'hF000_0000),
+    // Slave interface 1 (to SRAM controller)
+    .wbs1_addr    (32'h0000_0000),
+    .wbs1_addr_msk(32'h0000_0000),
 
     .wbs1_adr_o(wbs3_adr_o),
     .wbs1_dat_i(wbs3_dat_i),
