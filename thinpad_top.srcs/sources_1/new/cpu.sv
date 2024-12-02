@@ -5,7 +5,8 @@ module cpu (
     input wire rst_i,
 
     // wishbone
-    output reg fence_o,
+    output reg fence_i_o,
+    output reg sfence_vma_o,
     output reg wbm0_cyc_o,
     output reg wbm0_stb_o,
     input wire wbm0_ack_i,
@@ -33,10 +34,17 @@ module cpu (
     output reg [31:0] rf_wdata_o,
     output reg rf_we_o,
 
+    // csr
+    output reg [11:0] csr_raddr_o,
+    input wire [31:0] csr_rdata_i,
+    output reg [11:0] csr_waddr_o,
+    output reg [31:0] csr_wdata_o,
+    output reg csr_we_o,
+
     // alu
     output reg [31:0] alu_a_o,
     output reg [31:0] alu_b_o,
-    output reg [2:0] alu_op_o,
+    output reg [3:0] alu_op_o,
     input wire [31:0] alu_y_i,
     
     // imm_gen
@@ -111,6 +119,11 @@ module cpu (
     logic [2:0] inst_type_ex_mem;
 
     EX EX(
+        .clk_i(clk_i),
+        .rst_i(rst_i),
+        .stall_i(stall_ex_mem),
+        .bubble_i(bubble_ex_mem),
+
         .pc_i(pc_id_ex),
         .rf_raddr_a_i(rf_raddr_a_o),
         .rf_rdata_a_i(rf_rdata_a_i),
@@ -127,6 +140,12 @@ module cpu (
         .rf_waddr_i(rf_waddr_o),
         .rf_wdata_i(rf_wdata_o),
         .rf_we_i(rf_we_o),
+
+        .csr_raddr_o(csr_raddr_o),
+        .csr_rdata_i(csr_rdata_i),
+        .csr_waddr_o(csr_waddr_o),
+        .csr_wdata_o(csr_wdata_o),
+        .csr_we_o(csr_we_o),
 
         .jump_o(jump),
         .jump_addr_o(jump_addr),
@@ -161,6 +180,8 @@ module cpu (
         .clk_i(clk_i),
         .rst_i(rst_i),
 
+        .stall_i(stall_ex_mem),
+
         .inst_op_i(inst_op_ex_mem),
         .inst_type_i(inst_type_ex_mem),
         .alu_y_i(alu_y_ex_mem),
@@ -169,7 +190,8 @@ module cpu (
         .rf_wdata_o(rf_wdata_mem),
         .rf_we_o(rf_we_mem),
 
-        .fence_o(fence_o),
+        .fence_i_o(fence_i_o),
+        .sfence_vma_o(sfence_vma_o),
         .wb_cyc_o(wbm1_cyc_o),
         .wb_stb_o(wbm1_stb_o),
         .wb_ack_i(wbm1_ack_i),
@@ -181,8 +203,6 @@ module cpu (
     );
 
     logic stall_mem_wb, bubble_mem_wb;
-    logic [4:0] inst_op_mem_wb;
-    logic [2:0] inst_type_mem_wb;
 
     MEM_WB MEM_WB(
         .clk_i(clk_i),
@@ -197,8 +217,6 @@ module cpu (
         .rf_waddr_i(rf_waddr_ex_mem),
         .rf_wdata_i(rf_wdata_mem),
         
-        .inst_op_o(inst_op_mem_wb),
-        .inst_type_o(inst_type_mem_wb),
         .rf_waddr_o(rf_waddr_o),
         .rf_wdata_o(rf_wdata_o),
         .rf_we_o(rf_we_o)

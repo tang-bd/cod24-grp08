@@ -11,16 +11,12 @@ module MEM_WB(
     input wire [4:0] rf_waddr_i,
     input wire [31:0] rf_wdata_i,
 
-    output reg [4:0] inst_op_o,
-    output reg [2:0] inst_type_o,
     output reg [4:0] rf_waddr_o,
     output reg [31:0] rf_wdata_o,
     output reg rf_we_o
 );
     always_ff @(posedge clk_i) begin
         if (rst_i) begin
-            inst_op_o <= UNKNOWN_INST_OP;
-            inst_type_o <= UNKNOWN_INST_TYPE;
             rf_waddr_o <= 32'h0;
             rf_wdata_o <= 32'h0;
             rf_we_o <= 0;
@@ -28,14 +24,10 @@ module MEM_WB(
             if (stall_i) begin
                 // stall
             end else if (bubble_i) begin
-                inst_op_o <= UNKNOWN_INST_OP;
-                inst_type_o <= UNKNOWN_INST_TYPE;
                 rf_waddr_o <= 32'h0;
                 rf_wdata_o <= 32'h0;
                 rf_we_o <= 0;
             end else begin
-                inst_op_o <= inst_op_i;
-                inst_type_o <= inst_type_i;
                 rf_waddr_o <= rf_waddr_i;
 
                 case (inst_type_i)
@@ -75,6 +67,18 @@ module MEM_WB(
                             end
                             JALR: begin
                                 rf_wdata_o <= pc_i + 4;
+                                rf_we_o <= 1;
+                            end
+                            PCNT: begin
+                                rf_wdata_o <= alu_y_i;
+                                rf_we_o <= 1;
+                            end
+                            CTZ: begin
+                                rf_wdata_o <= alu_y_i;
+                                rf_we_o <= 1;
+                            end
+                            CSRRW: begin
+                                rf_wdata_o <= alu_y_i;
                                 rf_we_o <= 1;
                             end
                             default: begin

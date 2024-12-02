@@ -10,9 +10,7 @@ module cache #(
     input wire clk_i,
     input wire rst_i,
 
-    input wire fence_i,
-    input wire [31:0] cache_addr_i,
-    input wire [31:0] cache_mask_i,
+    input wire fence_i_i,
 
     // wishbone slave interface
     input wire wb_cyc_i,
@@ -66,7 +64,6 @@ module cache #(
         .douta(data_read)
     );
     
-    logic match;
     // Cache hit logic
     logic [SET_SIZE - 1:0] cache_hit;
     
@@ -80,14 +77,20 @@ module cache #(
     state_t state;
 
     always_comb begin
-        match = ~|((wb_adr_i ^ cache_addr_i) & cache_mask_i);
         cache_hit = 4'b0;
         wb_dat_o = mem_dat_i;
+        mem_dat_o = wb_dat_i;
         for (int i = 0; i < SET_SIZE; i = i + 1) begin
             cache_hit[i] = (tag_read[i] == addr_tag) && valid_array[addr_index][i];
-            if (cache_hit[i] && match) begin
+            if (cache_hit[i]) begin
                 wb_dat_o = data_read[i];
             end
+        end
+
+        data_write = 32'h0;
+        for (int i = 0; i < SET_SIZE; i = i + 1) begin
+            tag_we[i] = 1'b0;
+            data_we[i] = 1'b0;
         end
 
         case (state)
@@ -97,7 +100,6 @@ module cache #(
                     mem_cyc_o = wb_cyc_i;
                     mem_stb_o = wb_stb_i;
                     mem_adr_o = wb_adr_i;
-                    mem_dat_o = wb_dat_i;
                     mem_sel_o = 4'b1111;
                     mem_we_o = wb_we_i;
                 end else begin
@@ -110,7 +112,7 @@ module cache #(
                 end
             end
             READ_CACHE: begin
-                if (cache_hit != 4'b0 && match) begin
+                if (cache_hit != 4'b0) begin
                     wb_ack_o = 1'b1;
 
                     mem_cyc_o = 1'b0;
@@ -125,21 +127,31 @@ module cache #(
                     mem_cyc_o = wb_cyc_i;
                     mem_stb_o = wb_stb_i;
                     mem_adr_o = wb_adr_i;
-                    mem_dat_o = wb_dat_i;
                     mem_sel_o = 4'b1111;
                     mem_we_o = wb_we_i;
                 end
             end
             READ_MEM: begin
                 wb_ack_o = mem_ack_i;
-                wb_dat_o = mem_dat_i;
 
                 mem_cyc_o = wb_cyc_i;
                 mem_stb_o = wb_stb_i;
                 mem_adr_o = wb_adr_i;
-                mem_dat_o = wb_dat_i;
                 mem_sel_o = 4'b1111;
                 mem_we_o = wb_we_i;
+
+                if (mem_ack_i) begin
+                    data_write = mem_dat_i;
+                    for (int i = 0; i < SET_SIZE; i = i + 1) begin
+                        if (i == lru_array[addr_index]) begin
+                            tag_we[i] = 1'b1;
+                            data_we[i] = 1'b1;
+                        end else begin
+                            tag_we[i] = 1'b0;
+                            data_we[i] = 1'b0;
+                        end
+                    end
+                end
             end
             WRITE_MEM: begin
                 wb_ack_o = mem_ack_i;
@@ -148,9 +160,31 @@ module cache #(
                 mem_cyc_o = wb_cyc_i;
                 mem_stb_o = wb_stb_i;
                 mem_adr_o = wb_adr_i;
-                mem_dat_o = wb_dat_i;
                 mem_sel_o = 4'b1111;
                 mem_we_o = wb_we_i;
+
+                if (mem_ack_i) begin
+                    data_write = wb_dat_i;
+                    for (int i = 0; i < SET_SIZE; i = i + 1) begin
+                        if (cache_hit != 4'b0) begin
+                            if (cache_hit[i]) begin
+                                tag_we[i] = 1'b1;
+                                data_we[i] = 1'b1;
+                            end else begin
+                                tag_we[i] = 1'b0;
+                                data_we[i] = 1'b0;
+                            end
+                        end else begin
+                            if (i == lru_array[addr_index]) begin
+                                tag_we[i] = 1'b1;
+                                data_we[i] = 1'b1;
+                            end else begin
+                                tag_we[i] = 1'b0;
+                                data_we[i] = 1'b0;
+                            end
+                        end
+                    end
+                end
             end
         endcase
     end
@@ -167,28 +201,23 @@ module cache #(
         end else begin
             case (state)
                 IDLE: begin
-                    for (int i = 0; i < SET_SIZE; i = i + 1) begin
-                        tag_we[i] <= 1'b0;
-                        data_we[i] <= 1'b0;
-                    end
                     if (wb_stb_i && wb_cyc_i) begin
                         if (wb_we_i) begin
                             state <= WRITE_MEM;
                         end else begin
                             state <= READ_CACHE;
                         end
-                    end else if (fence_i) begin
+                    end else if (fence_i_i) begin
                         for (int i = 0; i < (1 << INDEX_WIDTH); i = i + 1) begin
                             for (int j = 0; j < SET_SIZE; j = j + 1) begin
                                 valid_array[i][j] <= 1'b0;
                             end
                             lru_array[i] <= 0;
                         end
-                        state <= IDLE;
                     end
                 end
                 READ_CACHE: begin
-                    if (cache_hit != 4'b0 && match) begin
+                    if (cache_hit != 4'b0) begin
                         state <= IDLE;
                     end else begin
                         state <= READ_MEM;
@@ -198,45 +227,13 @@ module cache #(
                     if (mem_ack_i) begin
                         valid_array[addr_index][lru_array[addr_index]] <= 1'b1;
                         lru_array[addr_index] <= (lru_array[addr_index] + 1) % SET_SIZE;
-                        data_write <= mem_dat_i;
-                        for (int i = 0; i < SET_SIZE; i = i + 1) begin
-                            if (i == lru_array[addr_index] && match) begin
-                                tag_we[i] <= 1'b1;
-                                data_we[i] <= 1'b1;
-                            end else begin
-                                tag_we[i] <= 1'b0;
-                                data_we[i] <= 1'b0;
-                            end
-                        end
                         state <= IDLE;
                     end
                 end
                 WRITE_MEM: begin
                     if (mem_ack_i) begin
-                        if (match) begin
-                            data_write <= wb_dat_i;
-                            for (int i = 0; i < SET_SIZE; i = i + 1) begin
-                                if (cache_hit != 4'b0) begin
-                                    if (cache_hit[i]) begin
-                                        tag_we[i] <= 1'b1;
-                                        data_we[i] <= 1'b1;
-                                    end else begin
-                                        tag_we[i] <= 1'b0;
-                                        data_we[i] <= 1'b0;
-                                    end
-                                end else begin
-                                    valid_array[addr_index][lru_array[addr_index]] <= 1'b1;
-                                    lru_array[addr_index] <= (lru_array[addr_index] + 1) % SET_SIZE;
-                                    if (i == lru_array[addr_index]) begin
-                                        tag_we[i] <= 1'b1;
-                                        data_we[i] <= 1'b1;
-                                    end else begin
-                                        tag_we[i] <= 1'b0;
-                                        data_we[i] <= 1'b0;
-                                    end
-                                end
-                            end
-                        end
+                        valid_array[addr_index][lru_array[addr_index]] <= 1'b1;
+                        lru_array[addr_index] <= (lru_array[addr_index] + 1) % SET_SIZE;
                         state <= IDLE;
                     end
                 end
