@@ -69,6 +69,14 @@ module MEM_WB(
                                 rf_wdata_o <= pc_i + 4;
                                 rf_we_o <= 1;
                             end
+                            PCNT: begin
+                                rf_wdata_o <= alu_y_i;
+                                rf_we_o <= 1;
+                            end
+                            CTZ: begin
+                                rf_wdata_o <= alu_y_i;
+                                rf_we_o <= 1;
+                            end
                             CSRRW: begin
                                 rf_wdata_o <= alu_y_i;
                                 rf_we_o <= 1;
