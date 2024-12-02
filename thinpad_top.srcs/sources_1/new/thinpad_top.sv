@@ -101,7 +101,7 @@ module thinpad_top (
   logic sys_clk;
   logic sys_rst;
 
-  assign sys_clk = clk_10M;
+  assign sys_clk = clk_50M;
   // 异步复位，同步释放，将 locked 信号转为后级电路的复位 reset_of_clk10M
   always_ff @(posedge sys_clk or negedge locked) begin
     if (~locked) sys_rst <= 1'b1;
@@ -280,7 +280,7 @@ module thinpad_top (
   // 串口控制器模块
   // NOTE: 如果修改系统时钟频率，也需要修改此处的时钟频率参数
   uart_controller #(
-      .CLK_FREQ(10_000_000),
+      .CLK_FREQ(50_000_000),
       .BAUD    (115200)
   ) uart_controller (
       .clk_i(sys_clk),
@@ -396,151 +396,151 @@ module thinpad_top (
   logic [3:0] wbm1_sel_i;
   logic wbm1_we_i;
 
-  logic wbp0_cyc_i, wbp0_stb_i, wbp0_ack_o;
-  logic [31:0] wbp0_adr_i, wbp0_dat_i, wbp0_dat_o;
-  logic [3:0] wbp0_sel_i;
-  logic wbp0_we_i;
+//   logic wbp0_cyc_i, wbp0_stb_i, wbp0_ack_o;
+//   logic [31:0] wbp0_adr_i, wbp0_dat_i, wbp0_dat_o;
+//   logic [3:0] wbp0_sel_i;
+//   logic wbp0_we_i;
 
-  logic wbp1_cyc_i, wbp1_stb_i, wbp1_ack_o;
-  logic [31:0] wbp1_adr_i, wbp1_dat_i, wbp1_dat_o;
-  logic [3:0] wbp1_sel_i;
-  logic wbp1_we_i;
+//   logic wbp1_cyc_i, wbp1_stb_i, wbp1_ack_o;
+//   logic [31:0] wbp1_adr_i, wbp1_dat_i, wbp1_dat_o;
+//   logic [3:0] wbp1_sel_i;
+//   logic wbp1_we_i;
 
-  mmu immu (
-      .clk_i(sys_clk),
-      .rst_i(sys_rst),
+//   mmu immu (
+//       .clk_i(sys_clk),
+//       .rst_i(sys_rst),
 
-      .satp_i(satp),
-      .uart_addr_i(32'h1000_0000),
-      .uart_mask_i(32'hFFFF_0000),
+//       .satp_i(satp),
+//       .uart_addr_i(32'h1000_0000),
+//       .uart_mask_i(32'hFFFF_0000),
 
-      .wb_cyc_i(wbm0_cyc_i),
-      .wb_stb_i(wbm0_stb_i),
-      .wb_ack_o(wbm0_ack_o),
-      .wb_adr_i(wbm0_adr_i),
-      .wb_dat_i(wbm0_dat_i),
-      .wb_dat_o(wbm0_dat_o),
-      .wb_sel_i(wbm0_sel_i),
-      .wb_we_i(wbm0_we_i),
+//       .wb_cyc_i(wbm0_cyc_i),
+//       .wb_stb_i(wbm0_stb_i),
+//       .wb_ack_o(wbm0_ack_o),
+//       .wb_adr_i(wbm0_adr_i),
+//       .wb_dat_i(wbm0_dat_i),
+//       .wb_dat_o(wbm0_dat_o),
+//       .wb_sel_i(wbm0_sel_i),
+//       .wb_we_i(wbm0_we_i),
 
-      .mem_cyc_o(wbp0_cyc_i),
-      .mem_stb_o(wbp0_stb_i),
-      .mem_ack_i(wbp0_ack_o),
-      .mem_adr_o(wbp0_adr_i),
-      .mem_dat_o(wbp0_dat_i),
-      .mem_dat_i(wbp0_dat_o),
-      .mem_sel_o(wbp0_sel_i),
-      .mem_we_o(wbp0_we_i)
-  );
+//       .mem_cyc_o(wbp0_cyc_i),
+//       .mem_stb_o(wbp0_stb_i),
+//       .mem_ack_i(wbp0_ack_o),
+//       .mem_adr_o(wbp0_adr_i),
+//       .mem_dat_o(wbp0_dat_i),
+//       .mem_dat_i(wbp0_dat_o),
+//       .mem_sel_o(wbp0_sel_i),
+//       .mem_we_o(wbp0_we_i)
+//   );
 
-  mmu dmmu (
-      .clk_i(sys_clk),
-      .rst_i(sys_rst),
+//   mmu dmmu (
+//       .clk_i(sys_clk),
+//       .rst_i(sys_rst),
 
-      .satp_i(satp),
-      .uart_addr_i(32'h1000_0000),
-      .uart_mask_i(32'hFFFF_0000),
+//       .satp_i(satp),
+//       .uart_addr_i(32'h1000_0000),
+//       .uart_mask_i(32'hFFFF_0000),
 
-      .wb_cyc_i(wbm1_cyc_i),
-      .wb_stb_i(wbm1_stb_i),
-      .wb_ack_o(wbm1_ack_o),
-      .wb_adr_i(wbm1_adr_i),
-      .wb_dat_i(wbm1_dat_i),
-      .wb_dat_o(wbm1_dat_o),
-      .wb_sel_i(wbm1_sel_i),
-      .wb_we_i(wbm1_we_i),
+//       .wb_cyc_i(wbm1_cyc_i),
+//       .wb_stb_i(wbm1_stb_i),
+//       .wb_ack_o(wbm1_ack_o),
+//       .wb_adr_i(wbm1_adr_i),
+//       .wb_dat_i(wbm1_dat_i),
+//       .wb_dat_o(wbm1_dat_o),
+//       .wb_sel_i(wbm1_sel_i),
+//       .wb_we_i(wbm1_we_i),
 
-      .mem_cyc_o(wbp1_cyc_i),
-      .mem_stb_o(wbp1_stb_i),
-      .mem_ack_i(wbp1_ack_o),
-      .mem_adr_o(wbp1_adr_i),
-      .mem_dat_o(wbp1_dat_i),
-      .mem_dat_i(wbp1_dat_o),
-      .mem_sel_o(wbp1_sel_i),
-      .mem_we_o(wbp1_we_i)
-  );
+//       .mem_cyc_o(wbp1_cyc_i),
+//       .mem_stb_o(wbp1_stb_i),
+//       .mem_ack_i(wbp1_ack_o),
+//       .mem_adr_o(wbp1_adr_i),
+//       .mem_dat_o(wbp1_dat_i),
+//       .mem_dat_i(wbp1_dat_o),
+//       .mem_sel_o(wbp1_sel_i),
+//       .mem_we_o(wbp1_we_i)
+//   );
 
-  /* =========== MMU end =========== */
+//   /* =========== MMU end =========== */
 
-  /* =========== Cache begin =========== */
+//   /* =========== Cache begin =========== */
 
-  logic wbc0_cyc_i, wbc0_stb_i, wbc0_ack_o;
-  logic [31:0] wbc0_adr_i, wbc0_dat_i, wbc0_dat_o;
-  logic [3:0] wbc0_sel_i;
-  logic wbc0_we_i;
+//   logic wbc0_cyc_i, wbc0_stb_i, wbc0_ack_o;
+//   logic [31:0] wbc0_adr_i, wbc0_dat_i, wbc0_dat_o;
+//   logic [3:0] wbc0_sel_i;
+//   logic wbc0_we_i;
 
-  logic wbc1_cyc_i, wbc1_stb_i, wbc1_ack_o;
-  logic [31:0] wbc1_adr_i, wbc1_dat_i, wbc1_dat_o;
-  logic [3:0] wbc1_sel_i;
-  logic wbc1_we_i;
+//   logic wbc1_cyc_i, wbc1_stb_i, wbc1_ack_o;
+//   logic [31:0] wbc1_adr_i, wbc1_dat_i, wbc1_dat_o;
+//   logic [3:0] wbc1_sel_i;
+//   logic wbc1_we_i;
 
-  logic fence_i;
+//   logic fence_i;
 
-  cache #(
-      .DATA_WIDTH(32),
-      .ADDR_WIDTH(32),
-      .TAG_WIDTH(22),
-      .INDEX_WIDTH(8),
-      .OFFSET_WIDTH(2)
-  ) icache (
-      .clk_i(sys_clk),
-      .rst_i(sys_rst),
+//   cache #(
+//       .DATA_WIDTH(32),
+//       .ADDR_WIDTH(32),
+//       .TAG_WIDTH(22),
+//       .INDEX_WIDTH(8),
+//       .OFFSET_WIDTH(2)
+//   ) icache (
+//       .clk_i(sys_clk),
+//       .rst_i(sys_rst),
 
-      .fence_i(fence_i),
-      .uart_addr_i(32'h1000_0000),
-      .uart_mask_i(32'hFFFF_0000),
+//       .fence_i(fence_i),
+//       .uart_addr_i(32'h1000_0000),
+//       .uart_mask_i(32'hFFFF_0000),
 
-      .wb_cyc_i(wbp0_cyc_i),
-      .wb_stb_i(wbp0_stb_i),
-      .wb_ack_o(wbp0_ack_o),
-      .wb_adr_i(wbp0_adr_i),
-      .wb_dat_i(wbp0_dat_i),
-      .wb_dat_o(wbp0_dat_o),
-      .wb_sel_i(wbp0_sel_i),
-      .wb_we_i(wbp0_we_i),
+//       .wb_cyc_i(wbp0_cyc_i),
+//       .wb_stb_i(wbp0_stb_i),
+//       .wb_ack_o(wbp0_ack_o),
+//       .wb_adr_i(wbp0_adr_i),
+//       .wb_dat_i(wbp0_dat_i),
+//       .wb_dat_o(wbp0_dat_o),
+//       .wb_sel_i(wbp0_sel_i),
+//       .wb_we_i(wbp0_we_i),
 
-      .mem_cyc_o(wbc0_cyc_i),
-      .mem_stb_o(wbc0_stb_i),
-      .mem_ack_i(wbc0_ack_o),
-      .mem_adr_o(wbc0_adr_i),
-      .mem_dat_o(wbc0_dat_i),
-      .mem_dat_i(wbc0_dat_o),
-      .mem_sel_o(wbc0_sel_i),
-      .mem_we_o(wbc0_we_i)
-  );
+//       .mem_cyc_o(wbc0_cyc_i),
+//       .mem_stb_o(wbc0_stb_i),
+//       .mem_ack_i(wbc0_ack_o),
+//       .mem_adr_o(wbc0_adr_i),
+//       .mem_dat_o(wbc0_dat_i),
+//       .mem_dat_i(wbc0_dat_o),
+//       .mem_sel_o(wbc0_sel_i),
+//       .mem_we_o(wbc0_we_i)
+//   );
 
-  cache #(
-      .DATA_WIDTH(32),
-      .ADDR_WIDTH(32),
-      .TAG_WIDTH(22),
-      .INDEX_WIDTH(8),
-      .OFFSET_WIDTH(2)
-  ) dcache (
-      .clk_i(sys_clk),
-      .rst_i(sys_rst),
+//   cache #(
+//       .DATA_WIDTH(32),
+//       .ADDR_WIDTH(32),
+//       .TAG_WIDTH(22),
+//       .INDEX_WIDTH(8),
+//       .OFFSET_WIDTH(2)
+//   ) dcache (
+//       .clk_i(sys_clk),
+//       .rst_i(sys_rst),
 
-      .fence_i(1'b0),
-      .uart_addr_i(32'h1000_0000),
-      .uart_mask_i(32'hFFFF_0000),
+//       .fence_i(1'b0),
+//       .uart_addr_i(32'h1000_0000),
+//       .uart_mask_i(32'hFFFF_0000),
 
-      .wb_cyc_i(wbp1_cyc_i),
-      .wb_stb_i(wbp1_stb_i),
-      .wb_ack_o(wbp1_ack_o),
-      .wb_adr_i(wbp1_adr_i),
-      .wb_dat_i(wbp1_dat_i),
-      .wb_dat_o(wbp1_dat_o),
-      .wb_sel_i(wbp1_sel_i),
-      .wb_we_i(wbp1_we_i),
+//       .wb_cyc_i(wbp1_cyc_i),
+//       .wb_stb_i(wbp1_stb_i),
+//       .wb_ack_o(wbp1_ack_o),
+//       .wb_adr_i(wbp1_adr_i),
+//       .wb_dat_i(wbp1_dat_i),
+//       .wb_dat_o(wbp1_dat_o),
+//       .wb_sel_i(wbp1_sel_i),
+//       .wb_we_i(wbp1_we_i),
 
-      .mem_cyc_o(wbc1_cyc_i),
-      .mem_stb_o(wbc1_stb_i),
-      .mem_ack_i(wbc1_ack_o),
-      .mem_adr_o(wbc1_adr_i),
-      .mem_dat_o(wbc1_dat_i),
-      .mem_dat_i(wbc1_dat_o),
-      .mem_sel_o(wbc1_sel_i),
-      .mem_we_o(wbc1_we_i)
-  );
+//       .mem_cyc_o(wbc1_cyc_i),
+//       .mem_stb_o(wbc1_stb_i),
+//       .mem_ack_i(wbc1_ack_o),
+//       .mem_adr_o(wbc1_adr_i),
+//       .mem_dat_o(wbc1_dat_i),
+//       .mem_dat_i(wbc1_dat_o),
+//       .mem_sel_o(wbc1_sel_i),
+//       .mem_we_o(wbc1_we_i)
+//   );
 
   /* =========== Cache end =========== */
 
@@ -549,24 +549,24 @@ module thinpad_top (
   wb_arbiter_2 arbiter(
         .clk(sys_clk),
         .rst(sys_rst),
-        .wbm0_cyc_i(wbc0_cyc_i),
-        .wbm0_stb_i(wbc0_stb_i),
-        .wbm0_ack_o(wbc0_ack_o),
-        .wbm0_adr_i(wbc0_adr_i),
-        .wbm0_dat_i(wbc0_dat_i),
-        .wbm0_dat_o(wbc0_dat_o),
-        .wbm0_sel_i(wbc0_sel_i),
-        .wbm0_we_i(wbc0_we_i),
+        .wbm0_cyc_i(wbm0_cyc_i),
+        .wbm0_stb_i(wbm0_stb_i),
+        .wbm0_ack_o(wbm0_ack_o),
+        .wbm0_adr_i(wbm0_adr_i),
+        .wbm0_dat_i(wbm0_dat_i),
+        .wbm0_dat_o(wbm0_dat_o),
+        .wbm0_sel_i(wbm0_sel_i),
+        .wbm0_we_i(wbm0_we_i),
         .wbm0_err_o(),
         .wbm0_rty_o(),
-        .wbm1_cyc_i(wbc1_cyc_i),
-        .wbm1_stb_i(wbc1_stb_i),
-        .wbm1_ack_o(wbc1_ack_o),
-        .wbm1_adr_i(wbc1_adr_i),
-        .wbm1_dat_i(wbc1_dat_i),
-        .wbm1_dat_o(wbc1_dat_o),
-        .wbm1_sel_i(wbc1_sel_i),
-        .wbm1_we_i(wbc1_we_i),
+        .wbm1_cyc_i(wbm1_cyc_i),
+        .wbm1_stb_i(wbm1_stb_i),
+        .wbm1_ack_o(wbm1_ack_o),
+        .wbm1_adr_i(wbm1_adr_i),
+        .wbm1_dat_i(wbm1_dat_i),
+        .wbm1_dat_o(wbm1_dat_o),
+        .wbm1_sel_i(wbm1_sel_i),
+        .wbm1_we_i(wbm1_we_i),
         .wbm1_err_o(),
         .wbm1_rty_o(),
         .wbs_cyc_o(wbm_cyc_o),

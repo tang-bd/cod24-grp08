@@ -219,14 +219,16 @@ module MEM(
         end else begin
             if (wb_ack_i) begin
                 data_ready <= 1;
-                case (inst_op_i)
-                    LB: begin
-                        rf_wdata_o <= (wb_dat_i >> 8 * (wb_adr_o[1:0]));
-                    end
-                    default: begin
-                        rf_wdata_o <= wb_dat_i;
-                    end
-                endcase
+                if (!wb_we_o) begin
+                    case (inst_op_i)
+                        LB: begin
+                            rf_wdata_o <= (wb_dat_i >> 8 * (wb_adr_o[1:0]));
+                        end
+                        default: begin
+                            rf_wdata_o <= wb_dat_i;
+                        end
+                    endcase
+                end
             end else if (!stall_i) begin
                 data_ready <= 0;
             end
