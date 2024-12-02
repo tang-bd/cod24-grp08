@@ -215,6 +215,7 @@ module MEM(
     always_ff @(posedge clk_i) begin
         if (rst_i) begin
             data_ready <= 0;
+            rf_wdata_o <= 32'h0;
         end else begin
             if (wb_ack_i) begin
                 data_ready <= 1;
