@@ -38,7 +38,7 @@ module EX(
     output reg [31:0] rf_rdata_b_o
 );
     logic [31:0] rf_rdata_a;
-    logic [31:0] csr_rdata;
+    logic [31:0] csr_rdata_reg;
 
     always_comb begin
         // We prioritize EX_MEM forwarding over MEM_WB forwarding
@@ -63,6 +63,7 @@ module EX(
                 jump_addr_o = pc_i;
                 case (inst_op_i)
                     ADD: alu_op_o = ALU_ADD;
+                    SLTU: alu_op_o = ALU_SLTU;
                     AND: alu_op_o = ALU_AND;
                     OR: alu_op_o = ALU_OR;
                     XOR: alu_op_o = ALU_XOR;
@@ -178,12 +179,36 @@ module EX(
                         jump_o = 0;
                         jump_addr_o = pc_i;
                         alu_op_o = ALU_ADD;
-                        alu_a_o = csr_rdata;
+                        alu_a_o = csr_rdata_reg;
                         alu_b_o = 0;
 
                         csr_raddr_o = imm_gen_data_i;
                         csr_waddr_o = imm_gen_data_i;
                         csr_wdata_o = rf_rdata_a;
+                        csr_we_o = 1;
+                    end
+                    CSRRW: begin
+                        jump_o = 0;
+                        jump_addr_o = pc_i;
+                        alu_op_o = ALU_ADD;
+                        alu_a_o = csr_rdata_reg;
+                        alu_b_o = 0;
+
+                        csr_raddr_o = imm_gen_data_i;
+                        csr_waddr_o = imm_gen_data_i;
+                        csr_wdata_o = csr_rdata_reg & rf_rdata_a;
+                        csr_we_o = 1;
+                    end
+                    CSRRC: begin
+                        jump_o = 0;
+                        jump_addr_o = pc_i;
+                        alu_op_o = ALU_ADD;
+                        alu_a_o = csr_rdata_reg;
+                        alu_b_o = 0;
+
+                        csr_raddr_o = imm_gen_data_i;
+                        csr_waddr_o = imm_gen_data_i;
+                        csr_wdata_o = csr_rdata_reg & ~rf_rdata_a;
                         csr_we_o = 1;
                     end
                     default: begin
@@ -277,16 +302,16 @@ module EX(
 
     always_ff @(posedge clk_i) begin
         if (rst_i) begin
-            csr_rdata <= 0;
+            csr_rdata_reg <= 0;
         end else begin
             if (stall_i) begin
 
             end else if (bubble_i) begin
-                csr_rdata <= 0;
+                csr_rdata_reg <= 0;
             end else begin
                 case (inst_op_i)
                 CSRRW: begin
-                    csr_rdata <= csr_rdata_i;
+                    csr_rdata_reg <= csr_rdata_i;
                 end
                 endcase
             end

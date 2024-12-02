@@ -11,7 +11,8 @@ module MEM(
     output reg [31:0] rf_wdata_o,
     output reg rf_we_o,
 
-    output reg fence_o,
+    output reg fence_i_o,
+    output reg sfence_vma_o,
     output reg wb_cyc_o,
     output reg wb_stb_o,
     input wire wb_ack_i,
@@ -46,20 +47,37 @@ module MEM(
             if (stall_i) begin
                 case (inst_type_i)
                     R_TYPE: begin
-                        rf_we_o = 1;
-                        fence_o = 0;
-                        wb_cyc_o = 0;
-                        wb_stb_o = 0;
-                        wb_adr_o = 32'h0;
-                        wb_dat_o = 32'h0;
-                        wb_sel_o = 4'b1111;
-                        wb_we_o = 0;
+                        case (inst_op_i)
+                            SFENCE_VMA: begin
+                                rf_we_o = 0;
+                                fence_i_o = 0;
+                                sfence_vma_o = 1;
+                                wb_cyc_o = 0;
+                                wb_stb_o = 0;
+                                wb_adr_o = 32'h0;
+                                wb_dat_o = 32'h0;
+                                wb_sel_o = 4'b1111;
+                                wb_we_o = 0;
+                            end
+                            default: begin
+                                rf_we_o = 1;
+                                fence_i_o = 0;
+                                sfence_vma_o = 0;
+                                wb_cyc_o = 0;
+                                wb_stb_o = 0;
+                                wb_adr_o = 32'h0;
+                                wb_dat_o = 32'h0;
+                                wb_sel_o = 4'b1111;
+                                wb_we_o = 0;
+                            end
+                        endcase
                     end
                     I_TYPE: begin
                         case (inst_op_i)
                             ADDI: begin
                                 rf_we_o = 1;
-                                fence_o = 0;
+                                fence_i_o = 0;
+                                sfence_vma_o = 0;
                                 wb_cyc_o = 0;
                                 wb_stb_o = 0;
                                 wb_adr_o = 32'h0;
@@ -69,7 +87,8 @@ module MEM(
                             end
                             ANDI: begin
                                 rf_we_o = 1;
-                                fence_o = 0;
+                                fence_i_o = 0;
+                                sfence_vma_o = 0;
                                 wb_cyc_o = 0;
                                 wb_stb_o = 0;
                                 wb_adr_o = 32'h0;
@@ -79,7 +98,8 @@ module MEM(
                             end
                             ORI: begin
                                 rf_we_o = 1;
-                                fence_o = 0;
+                                fence_i_o = 0;
+                                sfence_vma_o = 0;
                                 wb_cyc_o = 0;
                                 wb_stb_o = 0;
                                 wb_adr_o = 32'h0;
@@ -89,7 +109,8 @@ module MEM(
                             end
                             SLLI: begin
                                 rf_we_o = 1;
-                                fence_o = 0;
+                                fence_i_o = 0;
+                                sfence_vma_o = 0;
                                 wb_cyc_o = 0;
                                 wb_stb_o = 0;
                                 wb_adr_o = 32'h0;
@@ -99,7 +120,8 @@ module MEM(
                             end
                             SRLI: begin
                                 rf_we_o = 1;
-                                fence_o = 0;
+                                fence_i_o = 0;
+                                sfence_vma_o = 0;
                                 wb_cyc_o = 0;
                                 wb_stb_o = 0;
                                 wb_adr_o = 32'h0;
@@ -109,7 +131,8 @@ module MEM(
                             end
                             LB: begin
                                 rf_we_o = 1;
-                                fence_o = 0;
+                                fence_i_o = 0;
+                                sfence_vma_o = 0;
                                 wb_cyc_o = 1;
                                 wb_stb_o = 1;
                                 wb_adr_o = alu_y_i;
@@ -119,7 +142,8 @@ module MEM(
                             end
                             LW: begin
                                 rf_we_o = 1;
-                                fence_o = 0;
+                                fence_i_o = 0;
+                                sfence_vma_o = 0;
                                 wb_cyc_o = 1;
                                 wb_stb_o = 1;
                                 wb_adr_o = alu_y_i;
@@ -129,7 +153,8 @@ module MEM(
                             end
                             JALR: begin
                                 rf_we_o = 1;
-                                fence_o = 0;
+                                fence_i_o = 0;
+                                sfence_vma_o = 0;
                                 wb_cyc_o = 0;
                                 wb_stb_o = 0;
                                 wb_adr_o = alu_y_i;
@@ -139,7 +164,8 @@ module MEM(
                             end
                             FENCE_I: begin
                                 rf_we_o = 0;
-                                fence_o = 1;
+                                fence_i_o = 1;
+                                sfence_vma_o = 0;
                                 wb_cyc_o = 0;
                                 wb_stb_o = 0;
                                 wb_adr_o = 32'h0;
@@ -149,7 +175,8 @@ module MEM(
                             end
                             default: begin
                                 rf_we_o = 0;
-                                fence_o = 0;
+                                fence_i_o = 0;
+                                sfence_vma_o = 0;
                                 wb_cyc_o = 0;
                                 wb_stb_o = 0;
                                 wb_adr_o = 32'h0;
@@ -163,7 +190,8 @@ module MEM(
                         case (inst_op_i)
                             SB: begin
                                 rf_we_o = 0;
-                                fence_o = 0;
+                                fence_i_o = 0;
+                                sfence_vma_o = 0;
                                 wb_cyc_o = 1;
                                 wb_stb_o = 1;
                                 wb_adr_o = alu_y_i;
@@ -173,7 +201,8 @@ module MEM(
                             end
                             SW: begin
                                 rf_we_o = 0;
-                                fence_o = 0;
+                                fence_i_o = 0;
+                                sfence_vma_o = 0;
                                 wb_cyc_o = 1;
                                 wb_stb_o = 1;
                                 wb_adr_o = alu_y_i;
@@ -183,7 +212,8 @@ module MEM(
                             end
                             default: begin
                                 rf_we_o = 0;
-                                fence_o = 0;
+                                fence_i_o = 0;
+                                sfence_vma_o = 0;
                                 wb_cyc_o = 0;
                                 wb_stb_o = 0;
                                 wb_adr_o = 32'h0;
@@ -195,7 +225,8 @@ module MEM(
                     end
                     B_TYPE: begin
                         rf_we_o = 0;
-                        fence_o = 0;
+                        fence_i_o = 0;
+                        sfence_vma_o = 0;
                         wb_cyc_o = 0;
                         wb_stb_o = 0;
                         wb_adr_o = 32'h0;
@@ -205,7 +236,8 @@ module MEM(
                     end
                     U_TYPE: begin
                         rf_we_o = 1;
-                        fence_o = 0;
+                        fence_i_o = 0;
+                        sfence_vma_o = 0;
                         wb_cyc_o = 0;
                         wb_stb_o = 0;
                         wb_adr_o = 32'h0;
@@ -215,7 +247,8 @@ module MEM(
                     end
                     J_TYPE: begin
                         rf_we_o = 1;
-                        fence_o = 0;
+                        fence_i_o = 0;
+                        sfence_vma_o = 0;
                         wb_cyc_o = 0;
                         wb_stb_o = 0;
                         wb_adr_o = 32'h0;
@@ -225,7 +258,8 @@ module MEM(
                     end
                     default: begin
                         rf_we_o = 0;
-                        fence_o = 0;
+                        fence_i_o = 0;
+                        sfence_vma_o = 0;
                         wb_cyc_o = 0;
                         wb_stb_o = 0;
                         wb_adr_o = 32'h0;

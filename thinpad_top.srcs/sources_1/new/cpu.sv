@@ -5,7 +5,8 @@ module cpu (
     input wire rst_i,
 
     // wishbone
-    output reg fence_o,
+    output reg fence_i_o,
+    output reg sfence_vma_o,
     output reg wbm0_cyc_o,
     output reg wbm0_stb_o,
     input wire wbm0_ack_i,
@@ -189,7 +190,8 @@ module cpu (
         .rf_wdata_o(rf_wdata_mem),
         .rf_we_o(rf_we_mem),
 
-        .fence_o(fence_o),
+        .fence_i_o(fence_i_o),
+        .sfence_vma_o(sfence_vma_o),
         .wb_cyc_o(wbm1_cyc_o),
         .wb_stb_o(wbm1_stb_o),
         .wb_ack_i(wbm1_ack_i),

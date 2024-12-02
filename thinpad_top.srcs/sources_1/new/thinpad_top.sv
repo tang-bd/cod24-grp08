@@ -102,7 +102,6 @@ module thinpad_top (
   logic sys_rst;
 
   assign sys_clk = clk_50M;
-  logic sys_rst;
   // 异步复位，同步释放，将 locked 信号转为后级电路的复位 reset_of_clk10M
   always_ff @(posedge sys_clk or negedge locked) begin
     if (~locked) sys_rst <= 1'b1;
@@ -127,85 +126,6 @@ module thinpad_top (
   
 
   /* =========== Wishbone Master end =========== */
-
-  /* =========== Wishbone Slaves begin =========== */
-
-  sram_controller #(
-      .SRAM_ADDR_WIDTH(20),
-      .SRAM_DATA_WIDTH(32)
-  ) sram_controller_base (
-      .clk_i(sys_clk),
-      .rst_i(sys_rst),
-
-      // Wishbone slave (to MUX)
-      .wb_cyc_i(wbs0_cyc_o),
-      .wb_stb_i(wbs0_stb_o),
-      .wb_ack_o(wbs0_ack_i),
-      .wb_adr_i(wbs0_adr_o),
-      .wb_dat_i(wbs0_dat_o),
-      .wb_dat_o(wbs0_dat_i),
-      .wb_sel_i(wbs0_sel_o),
-      .wb_we_i (wbs0_we_o),
-
-      // To SRAM chip
-      .sram_addr(base_ram_addr),
-      .sram_data(base_ram_data),
-      .sram_ce_n(base_ram_ce_n),
-      .sram_oe_n(base_ram_oe_n),
-      .sram_we_n(base_ram_we_n),
-      .sram_be_n(base_ram_be_n)
-  );
-
-  sram_controller #(
-      .SRAM_ADDR_WIDTH(20),
-      .SRAM_DATA_WIDTH(32)
-  ) sram_controller_ext (
-      .clk_i(sys_clk),
-      .rst_i(sys_rst),
-
-      // Wishbone slave (to MUX)
-      .wb_cyc_i(wbs1_cyc_o),
-      .wb_stb_i(wbs1_stb_o),
-      .wb_ack_o(wbs1_ack_i),
-      .wb_adr_i(wbs1_adr_o),
-      .wb_dat_i(wbs1_dat_o),
-      .wb_dat_o(wbs1_dat_i),
-      .wb_sel_i(wbs1_sel_o),
-      .wb_we_i (wbs1_we_o),
-
-      // To SRAM chip
-      .sram_addr(ext_ram_addr),
-      .sram_data(ext_ram_data),
-      .sram_ce_n(ext_ram_ce_n),
-      .sram_oe_n(ext_ram_oe_n),
-      .sram_we_n(ext_ram_we_n),
-      .sram_be_n(ext_ram_be_n)
-  );
-
-  // 串口控制器模块
-  // NOTE: 如果修改系统时钟频率，也需要修改此处的时钟频率参数
-  uart_controller #(
-      .CLK_FREQ(50_000_000),
-      .BAUD    (115200)
-  ) uart_controller (
-      .clk_i(sys_clk),
-      .rst_i(sys_rst),
-
-      .wb_cyc_i(wbs2_cyc_o),
-      .wb_stb_i(wbs2_stb_o),
-      .wb_ack_o(wbs2_ack_i),
-      .wb_adr_i(wbs2_adr_o),
-      .wb_dat_i(wbs2_dat_o),
-      .wb_dat_o(wbs2_dat_i),
-      .wb_sel_i(wbs2_sel_o),
-      .wb_we_i (wbs2_we_o),
-
-      // to UART pins
-      .uart_txd_o(txd),
-      .uart_rxd_i(rxd)
-  );
-
-  /* =========== Wishbone Slaves end =========== */
 
   /* =========== ALU begin =========== */
 
@@ -310,11 +230,14 @@ module thinpad_top (
   logic [3:0] wbp1_sel_i;
   logic wbp1_we_i;
 
+  logic sfence_vma;
+
   mmu immu (
       .clk_i(sys_clk),
       .rst_i(sys_rst),
 
       .satp_i(satp),
+      .sfence_vma_i(sfence_vma),
 
       .wb_cyc_i(wbm0_cyc_i),
       .wb_stb_i(wbm0_stb_i),
@@ -340,6 +263,7 @@ module thinpad_top (
       .rst_i(sys_rst),
 
       .satp_i(satp),
+      .sfence_vma_i(sfence_vma),
 
       .wb_cyc_i(wbs3_cyc_o),
       .wb_stb_i(wbs3_stb_o),
@@ -386,7 +310,7 @@ module thinpad_top (
       .clk_i(sys_clk),
       .rst_i(sys_rst),
 
-      .fence_i(fence_i),
+      .fence_i_i(fence_i),
 
       .wb_cyc_i(wbp0_cyc_i),
       .wb_stb_i(wbp0_stb_i),
@@ -417,7 +341,7 @@ module thinpad_top (
       .clk_i(sys_clk),
       .rst_i(sys_rst),
 
-      .fence_i(1'b0),
+      .fence_i_i(1'b0),
 
       .wb_cyc_i(wbp1_cyc_i),
       .wb_stb_i(wbp1_stb_i),
@@ -613,6 +537,85 @@ module thinpad_top (
 
   /* =========== Wishbone MUX end =========== */
 
+  /* =========== Wishbone Slaves begin =========== */
+
+  sram_controller #(
+      .SRAM_ADDR_WIDTH(20),
+      .SRAM_DATA_WIDTH(32)
+  ) sram_controller_base (
+      .clk_i(sys_clk),
+      .rst_i(sys_rst),
+
+      // Wishbone slave (to MUX)
+      .wb_cyc_i(wbs0_cyc_o),
+      .wb_stb_i(wbs0_stb_o),
+      .wb_ack_o(wbs0_ack_i),
+      .wb_adr_i(wbs0_adr_o),
+      .wb_dat_i(wbs0_dat_o),
+      .wb_dat_o(wbs0_dat_i),
+      .wb_sel_i(wbs0_sel_o),
+      .wb_we_i (wbs0_we_o),
+
+      // To SRAM chip
+      .sram_addr(base_ram_addr),
+      .sram_data(base_ram_data),
+      .sram_ce_n(base_ram_ce_n),
+      .sram_oe_n(base_ram_oe_n),
+      .sram_we_n(base_ram_we_n),
+      .sram_be_n(base_ram_be_n)
+  );
+
+  sram_controller #(
+      .SRAM_ADDR_WIDTH(20),
+      .SRAM_DATA_WIDTH(32)
+  ) sram_controller_ext (
+      .clk_i(sys_clk),
+      .rst_i(sys_rst),
+
+      // Wishbone slave (to MUX)
+      .wb_cyc_i(wbs1_cyc_o),
+      .wb_stb_i(wbs1_stb_o),
+      .wb_ack_o(wbs1_ack_i),
+      .wb_adr_i(wbs1_adr_o),
+      .wb_dat_i(wbs1_dat_o),
+      .wb_dat_o(wbs1_dat_i),
+      .wb_sel_i(wbs1_sel_o),
+      .wb_we_i (wbs1_we_o),
+
+      // To SRAM chip
+      .sram_addr(ext_ram_addr),
+      .sram_data(ext_ram_data),
+      .sram_ce_n(ext_ram_ce_n),
+      .sram_oe_n(ext_ram_oe_n),
+      .sram_we_n(ext_ram_we_n),
+      .sram_be_n(ext_ram_be_n)
+  );
+
+  // 串口控制器模块
+  // NOTE: 如果修改系统时钟频率，也需要修改此处的时钟频率参数
+  uart_controller #(
+      .CLK_FREQ(50_000_000),
+      .BAUD    (115200)
+  ) uart_controller (
+      .clk_i(sys_clk),
+      .rst_i(sys_rst),
+
+      .wb_cyc_i(wbs2_cyc_o),
+      .wb_stb_i(wbs2_stb_o),
+      .wb_ack_o(wbs2_ack_i),
+      .wb_adr_i(wbs2_adr_o),
+      .wb_dat_i(wbs2_dat_o),
+      .wb_dat_o(wbs2_dat_i),
+      .wb_sel_i(wbs2_sel_o),
+      .wb_we_i (wbs2_we_o),
+
+      // to UART pins
+      .uart_txd_o(txd),
+      .uart_rxd_i(rxd)
+  );
+
+  /* =========== Wishbone Slaves end =========== */
+
   /* =========== Central Processing Unit begin =========== */
 
   // CPU 模块
@@ -620,7 +623,8 @@ module thinpad_top (
   cpu cpu(
     .clk_i(sys_clk),
     .rst_i(sys_rst),
-    .fence_o(fence_i),
+    .fence_i_o(fence_i),
+    .sfence_vma_o(sfence_vma),
     .wbm0_cyc_o(wbm0_cyc_i),
     .wbm0_stb_o(wbm0_stb_i),
     .wbm0_ack_i(wbm0_ack_o),

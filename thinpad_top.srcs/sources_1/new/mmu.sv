@@ -18,6 +18,7 @@ module mmu #(
 
     // satp register
     input wire [DATA_WIDTH - 1:0] satp_i,
+    input wire sfence_vma_i,
 
     // wishbone slave interface
     input wire wb_cyc_i,
@@ -193,6 +194,15 @@ module mmu #(
                         end else begin
                             state <= READ_PTE;
                         end
+                    end if (sfence_vma_i) begin
+                        for (int i = 0; i < 1 << TLB_INDEX_WIDTH; i = i + 1) begin
+                            tlb_valid[i] <= 0;
+                            tlb_lru[i] <= 0;
+                            for (int j = 0; j < TLB_SET_SIZE; j = j + 1) begin
+                                tlb_tag[i][j] <= 0;
+                                tlb_data[i][j] <= 0;
+                            end
+                        end
                     end
                 end
                 READ_PTE: begin
@@ -207,6 +217,10 @@ module mmu #(
                     end else if (pte_data[1] == 1'b1 || pte_data[3] == 1'b1) begin // r == 1 || x == 1
                         if (wb_we_i && !pte_data[2]) begin // we == 1 && w == 0
                             // TODO: page fault
+                            tlb_valid[addr_tlb_index][tlb_lru[addr_tlb_index]] <= 1'b1;
+                            tlb_lru[addr_tlb_index] <= tlb_lru[addr_tlb_index] + 1;
+                            tlb_tag[addr_tlb_index][tlb_lru[addr_tlb_index]] <= addr_tlb_tag;
+                            tlb_data[addr_tlb_index][tlb_lru[addr_tlb_index]] <= pte_data;
                             state <= TRANSLATE;
                         end else begin
                             tlb_valid[addr_tlb_index][tlb_lru[addr_tlb_index]] <= 1'b1;
