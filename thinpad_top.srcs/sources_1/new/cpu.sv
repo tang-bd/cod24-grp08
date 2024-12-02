@@ -118,6 +118,11 @@ module cpu (
     logic [2:0] inst_type_ex_mem;
 
     EX EX(
+        .clk_i(clk_i),
+        .rst_i(rst_i),
+        .stall_i(stall_ex_mem),
+        .bubble_i(bubble_ex_mem),
+
         .pc_i(pc_id_ex),
         .rf_raddr_a_i(rf_raddr_a_o),
         .rf_rdata_a_i(rf_rdata_a_i),
