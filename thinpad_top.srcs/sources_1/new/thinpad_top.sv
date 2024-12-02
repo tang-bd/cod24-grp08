@@ -474,7 +474,7 @@ module thinpad_top (
 //   logic [3:0] wbc1_sel_i;
 //   logic wbc1_we_i;
 
-//   logic fence_i;
+  logic fence_i;
 
 //   cache #(
 //       .DATA_WIDTH(32),
