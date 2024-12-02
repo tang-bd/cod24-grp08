@@ -8,7 +8,7 @@ module mmu #(
     parameter TLB_TAG_WIDTH = 22,
     parameter TLB_INDEX_WIDTH = 8,
     parameter TLB_OFFSET_WIDTH = 2,
-    parameter TLB_SET_SIZE = 4,
+    parameter TLB_SET_SIZE = 1,
     parameter PAGE_SIZE = 2 ** OFFSET_WIDTH,
     parameter PTE_SIZE = 4
 )(
