@@ -35,14 +35,7 @@ module MEM(
                 end
             endcase
         end else begin
-            case (inst_op_i)
-                LB: begin
-                    rf_wdata_o = (rf_wdata_reg >> 8 * (wb_adr_o[1:0]));
-                end
-                default: begin
-                    rf_wdata_o = rf_wdata_reg;
-                end
-            endcase
+            rf_wdata_o = rf_wdata_reg;
         end
 
         case (inst_type_i)
@@ -249,7 +242,14 @@ module MEM(
         end else begin
             if (wb_ack_i) begin
                 data_ready <= 1;
-                rf_wdata_reg <= wb_dat_i;
+                case (inst_op_i)
+                    LB: begin
+                        rf_wdata_reg <= (wb_dat_i >> 8 * (wb_adr_o[1:0]));
+                    end
+                    default: begin
+                        rf_wdata_reg <= wb_dat_i;
+                    end
+                endcase
             end else if (!stall_i) begin
                 data_ready <= 0;
             end

@@ -184,6 +184,26 @@ module tb;
     #200;
     uart.pc_send_byte(8'h00);
     #200;
+
+    uart.pc_send_byte(8'h44);  // D
+    #200;
+    uart.pc_send_byte(8'h00);
+    #200;
+    uart.pc_send_byte(8'h00);
+    #200;
+    uart.pc_send_byte(8'h10);
+    #200;
+    uart.pc_send_byte(8'h80);
+    #200;
+
+    uart.pc_send_byte(8'h00);
+    #200;
+    uart.pc_send_byte(8'h00);
+    #200;
+    uart.pc_send_byte(8'h00);
+    #200;
+    uart.pc_send_byte(8'h20);
+    #200;
   end
 
   // 待测试用户设计

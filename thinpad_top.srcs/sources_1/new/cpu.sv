@@ -201,8 +201,6 @@ module cpu (
     );
 
     logic stall_mem_wb, bubble_mem_wb;
-    logic [4:0] inst_op_mem_wb;
-    logic [2:0] inst_type_mem_wb;
 
     MEM_WB MEM_WB(
         .clk_i(clk_i),
@@ -217,8 +215,6 @@ module cpu (
         .rf_waddr_i(rf_waddr_ex_mem),
         .rf_wdata_i(rf_wdata_mem),
         
-        .inst_op_o(inst_op_mem_wb),
-        .inst_type_o(inst_type_mem_wb),
         .rf_waddr_o(rf_waddr_o),
         .rf_wdata_o(rf_wdata_o),
         .rf_we_o(rf_we_o)
