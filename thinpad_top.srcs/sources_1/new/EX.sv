@@ -67,6 +67,7 @@ module EX(
                     AND: alu_op_o = ALU_AND;
                     OR: alu_op_o = ALU_OR;
                     XOR: alu_op_o = ALU_XOR;
+                    SBSET: alu_op_o = ALU_SBSET;
                     default: alu_op_o = ALU_ADD;
                 endcase
                 alu_a_o = rf_rdata_a;
@@ -169,6 +170,30 @@ module EX(
                         alu_op_o = ALU_ADD;
                         alu_a_o = pc_i;
                         alu_b_o = imm_gen_data_i;
+
+                        csr_raddr_o = 0;
+                        csr_waddr_o = 0;
+                        csr_wdata_o = 0;
+                        csr_we_o = 0;
+                    end
+                    PCNT: begin
+                        jump_o = 0;
+                        jump_addr_o = pc_i;
+                        alu_op_o = ALU_PCNT;
+                        alu_a_o = rf_rdata_a;
+                        alu_b_o = 0;
+
+                        csr_raddr_o = 0;
+                        csr_waddr_o = 0;
+                        csr_wdata_o = 0;
+                        csr_we_o = 0;
+                    end
+                    CTZ: begin
+                        jump_o = 0;
+                        jump_addr_o = pc_i;
+                        alu_op_o = ALU_CTZ;
+                        alu_a_o = rf_rdata_a;
+                        alu_b_o = 0;
 
                         csr_raddr_o = 0;
                         csr_waddr_o = 0;
