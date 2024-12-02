@@ -44,7 +44,7 @@ module cpu (
     // alu
     output reg [31:0] alu_a_o,
     output reg [31:0] alu_b_o,
-    output reg [2:0] alu_op_o,
+    output reg [3:0] alu_op_o,
     input wire [31:0] alu_y_i,
     
     // imm_gen

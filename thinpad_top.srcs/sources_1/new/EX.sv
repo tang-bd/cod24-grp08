@@ -32,7 +32,7 @@ module EX(
 
     output reg jump_o,
     output reg [31:0] jump_addr_o,
-    output reg [2:0] alu_op_o,
+    output reg [3:0] alu_op_o,
     output reg [31:0] alu_a_o,
     output reg [31:0] alu_b_o,
     output reg [31:0] rf_rdata_b_o

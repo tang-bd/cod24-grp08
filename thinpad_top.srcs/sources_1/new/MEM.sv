@@ -162,6 +162,28 @@ module MEM(
                                 wb_sel_o = 4'b1111;
                                 wb_we_o = 0;
                             end
+                            PCNT: begin
+                                rf_we_o = 1;
+                                fence_i_o = 0;
+                                sfence_vma_o = 0;
+                                wb_cyc_o <= 0;
+                                wb_stb_o <= 0;
+                                wb_adr_o <= 32'h0;
+                                wb_dat_o <= 32'h0;
+                                wb_sel_o <= 4'b1111;
+                                wb_we_o <= 0;
+                            end
+                            CTZ: begin
+                                rf_we_o = 1;
+                                fence_i_o = 0;
+                                sfence_vma_o = 0;
+                                wb_cyc_o <= 0;
+                                wb_stb_o <= 0;
+                                wb_adr_o <= 32'h0;
+                                wb_dat_o <= 32'h0;
+                                wb_sel_o <= 4'b1111;
+                                wb_we_o <= 0;
+                            end
                             FENCE_I: begin
                                 rf_we_o = 0;
                                 fence_i_o = 1;

@@ -132,7 +132,7 @@ module thinpad_top (
   // ALU 模块
   logic [31:0] alu_a;
   logic [31:0] alu_b;
-  logic [ 2:0] alu_op;
+  logic [ 3:0] alu_op;
   logic [31:0] alu_y;
   
   alu alu(
