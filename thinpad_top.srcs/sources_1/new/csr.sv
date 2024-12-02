@@ -3,9 +3,9 @@ module csr(
     input wire clk_i,
     input wire rst_i,
     input wire [11:0] csr_raddr,
-    input reg [31:0] csr_rdata,
+    output reg [31:0] csr_rdata,
     input wire [11:0] csr_waddr,
-    output reg [31:0] csr_wdata,
+    input reg [31:0] csr_wdata,
     input wire csr_we,
 
     output reg [31:0] satp_o

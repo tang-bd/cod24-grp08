@@ -14,8 +14,6 @@ module mmu #(
 
     // satp register
     input wire [DATA_WIDTH - 1:0] satp_i,
-    input wire [ADDR_WIDTH - 1:0] uart_addr_i,
-    input wire [ADDR_WIDTH - 1:0] uart_mask_i,
 
     // wishbone slave interface
     input wire wb_cyc_i,
@@ -55,8 +53,6 @@ module mmu #(
     assign ppn[1] = satp_ppn;
     assign ppn[0] = pte_ppn;
 
-    wire match = !(~|((wb_adr_i ^ uart_addr_i) & uart_mask_i)) && wb_adr_i < 32'h8020_0000; // TODO: Temporary workaround
-
     typedef enum logic [1:0] {
         IDLE = 0,
         READ_PTE = 1,
@@ -71,7 +67,7 @@ module mmu #(
         case (state)
             IDLE: begin
                 if (wb_cyc_i && wb_stb_i) begin
-                    if (!(satp_mode && match)) begin // No translation needed
+                    if (!satp_mode || wb_adr_i > 32'h8020_0000) begin // No translation needed
                         wb_ack_o = mem_ack_i;
 
                         mem_cyc_o = wb_cyc_i;
@@ -126,7 +122,7 @@ module mmu #(
 
                 mem_cyc_o = wb_cyc_i;
                 mem_stb_o = wb_stb_i;
-                mem_adr_o = (satp_mode && match) ? pte_ppn * PAGE_SIZE + addr_offset : wb_adr_i;
+                mem_adr_o = satp_mode ? pte_ppn * PAGE_SIZE + addr_offset : wb_adr_i;
                 mem_dat_o = wb_dat_i;
                 mem_sel_o = wb_sel_i;
                 mem_we_o = wb_we_i;
@@ -143,7 +139,7 @@ module mmu #(
             case (state)
                 IDLE: begin
                     if (wb_cyc_i && wb_stb_i) begin
-                        if (!(satp_mode && match)) begin
+                        if (!satp_mode || wb_adr_i > 32'h8020_0000) begin
                             state <= TRANSLATE;
                         end else begin
                             state <= READ_PTE;

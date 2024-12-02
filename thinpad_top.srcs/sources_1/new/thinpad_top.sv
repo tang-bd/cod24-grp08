@@ -128,102 +128,6 @@ module thinpad_top (
 
   /* =========== Wishbone Master end =========== */
 
-  /* =========== Wishbone MUX begin =========== */
-  // Wishbone MUX (Masters) => bus slaves
-  logic wbs0_cyc_o;
-  logic wbs0_stb_o;
-  logic wbs0_ack_i;
-  logic [31:0] wbs0_adr_o;
-  logic [31:0] wbs0_dat_o;
-  logic [31:0] wbs0_dat_i;
-  logic [3:0] wbs0_sel_o;
-  logic wbs0_we_o;
-
-  logic wbs1_cyc_o;
-  logic wbs1_stb_o;
-  logic wbs1_ack_i;
-  logic [31:0] wbs1_adr_o;
-  logic [31:0] wbs1_dat_o;
-  logic [31:0] wbs1_dat_i;
-  logic [3:0] wbs1_sel_o;
-  logic wbs1_we_o;
-
-  logic wbs2_cyc_o;
-  logic wbs2_stb_o;
-  logic wbs2_ack_i;
-  logic [31:0] wbs2_adr_o;
-  logic [31:0] wbs2_dat_o;
-  logic [31:0] wbs2_dat_i;
-  logic [3:0] wbs2_sel_o;
-  logic wbs2_we_o;
-
-  wb_mux wb_mux (
-      .clk(sys_clk),
-      .rst(sys_rst),
-
-      // Master interface (to Lab5 master)
-      .wbm_adr_i(wbm_adr_o),
-      .wbm_dat_i(wbm_dat_o),
-      .wbm_dat_o(wbm_dat_i),
-      .wbm_we_i (wbm_we_o),
-      .wbm_sel_i(wbm_sel_o),
-      .wbm_stb_i(wbm_stb_o),
-      .wbm_ack_o(wbm_ack_i),
-      .wbm_err_o(),
-      .wbm_rty_o(),
-      .wbm_cyc_i(wbm_cyc_o),
-
-      // Slave interface 0 (to BaseRAM controller)
-      // Address range: 0x8000_0000 ~ 0x803F_FFFF
-      .wbs0_addr    (32'h8000_0000),
-      .wbs0_addr_msk(32'hFFC0_0000),
-
-      .wbs0_adr_o(wbs0_adr_o),
-      .wbs0_dat_i(wbs0_dat_i),
-      .wbs0_dat_o(wbs0_dat_o),
-      .wbs0_we_o (wbs0_we_o),
-      .wbs0_sel_o(wbs0_sel_o),
-      .wbs0_stb_o(wbs0_stb_o),
-      .wbs0_ack_i(wbs0_ack_i),
-      .wbs0_err_i('0),
-      .wbs0_rty_i('0),
-      .wbs0_cyc_o(wbs0_cyc_o),
-
-      // Slave interface 1 (to ExtRAM controller)
-      // Address range: 0x8040_0000 ~ 0x807F_FFFF
-      .wbs1_addr    (32'h8040_0000),
-      .wbs1_addr_msk(32'hFFC0_0000),
-
-      .wbs1_adr_o(wbs1_adr_o),
-      .wbs1_dat_i(wbs1_dat_i),
-      .wbs1_dat_o(wbs1_dat_o),
-      .wbs1_we_o (wbs1_we_o),
-      .wbs1_sel_o(wbs1_sel_o),
-      .wbs1_stb_o(wbs1_stb_o),
-      .wbs1_ack_i(wbs1_ack_i),
-      .wbs1_err_i('0),
-      .wbs1_rty_i('0),
-      .wbs1_cyc_o(wbs1_cyc_o),
-
-      // Slave interface 2 (to UART controller)
-      // Address range: 0x1000_0000 ~ 0x1000_FFFF
-      .wbs2_addr    (32'h1000_0000),
-      .wbs2_addr_msk(32'hFFFF_0000),
-
-      .wbs2_adr_o(wbs2_adr_o),
-      .wbs2_dat_i(wbs2_dat_i),
-      .wbs2_dat_o(wbs2_dat_o),
-      .wbs2_we_o (wbs2_we_o),
-      .wbs2_sel_o(wbs2_sel_o),
-      .wbs2_stb_o(wbs2_stb_o),
-      .wbs2_ack_i(wbs2_ack_i),
-      .wbs2_err_i('0),
-      .wbs2_rty_i('0),
-      .wbs2_cyc_o(wbs2_cyc_o)
-  );
-
-  /* =========== Wishbone MUX end =========== */
-
   /* =========== Wishbone Slaves begin =========== */
 
   sram_controller #(
@@ -287,14 +191,14 @@ module thinpad_top (
       .clk_i(sys_clk),
       .rst_i(sys_rst),
 
-      .wb_cyc_i(wbs2_cyc_o),
-      .wb_stb_i(wbs2_stb_o),
-      .wb_ack_o(wbs2_ack_i),
-      .wb_adr_i(wbs2_adr_o),
-      .wb_dat_i(wbs2_dat_o),
-      .wb_dat_o(wbs2_dat_i),
-      .wb_sel_i(wbs2_sel_o),
-      .wb_we_i (wbs2_we_o),
+      .wb_cyc_i(wbs3_cyc_o),
+      .wb_stb_i(wbs3_stb_o),
+      .wb_ack_o(wbs3_ack_i),
+      .wb_adr_i(wbs3_adr_o),
+      .wb_dat_i(wbs3_dat_o),
+      .wb_dat_o(wbs3_dat_i),
+      .wb_sel_i(wbs3_sel_o),
+      .wb_we_i (wbs3_we_o),
 
       // to UART pins
       .uart_txd_o(txd),
@@ -386,6 +290,16 @@ module thinpad_top (
 
   /* =========== MMU begin =========== */
 
+  logic wbm0_cyc_i, wbm0_stb_i, wbm0_ack_o;
+  logic [31:0] wbm0_adr_i, wbm0_dat_i, wbm0_dat_o;
+  logic [3:0] wbm0_sel_i;
+  logic wbm0_we_i;
+
+  logic wbm1_cyc_i, wbm1_stb_i, wbm1_ack_o;
+  logic [31:0] wbm1_adr_i, wbm1_dat_i, wbm1_dat_o;
+  logic [3:0] wbm1_sel_i;
+  logic wbm1_we_i;
+
   logic wbp0_cyc_i, wbp0_stb_i, wbp0_ack_o;
   logic [31:0] wbp0_adr_i, wbp0_dat_i, wbp0_dat_o;
   logic [3:0] wbp0_sel_i;
@@ -401,8 +315,6 @@ module thinpad_top (
       .rst_i(sys_rst),
 
       .satp_i(satp),
-      .uart_addr_i(32'h1000_0000),
-      .uart_mask_i(32'hFFFF_0000),
 
       .wb_cyc_i(wbm0_cyc_i),
       .wb_stb_i(wbm0_stb_i),
@@ -428,17 +340,15 @@ module thinpad_top (
       .rst_i(sys_rst),
 
       .satp_i(satp),
-      .uart_addr_i(32'h1000_0000),
-      .uart_mask_i(32'hFFFF_0000),
 
-      .wb_cyc_i(wbm1_cyc_i),
-      .wb_stb_i(wbm1_stb_i),
-      .wb_ack_o(wbm1_ack_o),
-      .wb_adr_i(wbm1_adr_i),
-      .wb_dat_i(wbm1_dat_i),
-      .wb_dat_o(wbm1_dat_o),
-      .wb_sel_i(wbm1_sel_i),
-      .wb_we_i(wbm1_we_i),
+      .wb_cyc_i(wbs2_cyc_o),
+      .wb_stb_i(wbs2_stb_o),
+      .wb_ack_o(wbs2_ack_i),
+      .wb_adr_i(wbs2_adr_o),
+      .wb_dat_i(wbs2_dat_o),
+      .wb_dat_o(wbs2_dat_i),
+      .wb_sel_i(wbs2_sel_o),
+      .wb_we_i(wbs2_we_o),
 
       .mem_cyc_o(wbp1_cyc_i),
       .mem_stb_o(wbp1_stb_i),
@@ -453,16 +363,6 @@ module thinpad_top (
   /* =========== MMU end =========== */
 
   /* =========== Cache begin =========== */
-
-  logic wbm0_cyc_i, wbm0_stb_i, wbm0_ack_o;
-  logic [31:0] wbm0_adr_i, wbm0_dat_i, wbm0_dat_o;
-  logic [3:0] wbm0_sel_i;
-  logic wbm0_we_i;
-
-  logic wbm1_cyc_i, wbm1_stb_i, wbm1_ack_o;
-  logic [31:0] wbm1_adr_i, wbm1_dat_i, wbm1_dat_o;
-  logic [3:0] wbm1_sel_i;
-  logic wbm1_we_i;
 
   logic wbc0_cyc_i, wbc0_stb_i, wbc0_ack_o;
   logic [31:0] wbc0_adr_i, wbc0_dat_i, wbc0_dat_o;
@@ -487,8 +387,6 @@ module thinpad_top (
       .rst_i(sys_rst),
 
       .fence_i(fence_i),
-      .uart_addr_i(32'h1000_0000),
-      .uart_mask_i(32'hFFFF_0000),
 
       .wb_cyc_i(wbp0_cyc_i),
       .wb_stb_i(wbp0_stb_i),
@@ -520,8 +418,6 @@ module thinpad_top (
       .rst_i(sys_rst),
 
       .fence_i(1'b0),
-      .uart_addr_i(32'h1000_0000),
-      .uart_mask_i(32'hFFFF_0000),
 
       .wb_cyc_i(wbp1_cyc_i),
       .wb_stb_i(wbp1_stb_i),
@@ -580,6 +476,142 @@ module thinpad_top (
     );
 
   /* =========== Arbiter end =========== */
+
+  /* =========== Wishbone MUX begin =========== */
+  // Wishbone MUX (Masters) => bus slaves
+  logic wbs0_cyc_o;
+  logic wbs0_stb_o;
+  logic wbs0_ack_i;
+  logic [31:0] wbs0_adr_o;
+  logic [31:0] wbs0_dat_o;
+  logic [31:0] wbs0_dat_i;
+  logic [3:0] wbs0_sel_o;
+  logic wbs0_we_o;
+
+  logic wbs1_cyc_o;
+  logic wbs1_stb_o;
+  logic wbs1_ack_i;
+  logic [31:0] wbs1_adr_o;
+  logic [31:0] wbs1_dat_o;
+  logic [31:0] wbs1_dat_i;
+  logic [3:0] wbs1_sel_o;
+  logic wbs1_we_o;
+
+  logic wbs2_cyc_o;
+  logic wbs2_stb_o;
+  logic wbs2_ack_i;
+  logic [31:0] wbs2_adr_o;
+  logic [31:0] wbs2_dat_o;
+  logic [31:0] wbs2_dat_i;
+  logic [3:0] wbs2_sel_o;
+  logic wbs2_we_o;
+
+  logic wbs3_cyc_o;
+  logic wbs3_stb_o;
+  logic wbs3_ack_i;
+  logic [31:0] wbs3_adr_o;
+  logic [31:0] wbs3_dat_o;
+  logic [31:0] wbs3_dat_i;
+  logic [3:0] wbs3_sel_o;
+  logic wbs3_we_o;
+
+  wb_mux uart_mux (
+    .clk(sys_clk),
+    .rst(sys_rst),
+
+    // Master interface (to Lab5 master)
+    .wbm_adr_i(wbm1_adr_i),
+    .wbm_dat_i(wbm1_dat_i),
+    .wbm_dat_o(wbm1_dat_o),
+    .wbm_we_i (wbm1_we_i),
+    .wbm_sel_i(wbm1_sel_i),
+    .wbm_stb_i(wbm1_stb_i),
+    .wbm_ack_o(wbm1_ack_o),
+    .wbm_err_o(),
+    .wbm_rty_o(),
+    .wbm_cyc_i(wbm1_cyc_i),
+
+    // Slave interface 0 (to SRAM controller)
+    .wbs0_addr    (32'h8000_0000),
+    .wbs0_addr_msk(32'hF000_0000),
+
+    .wbs0_adr_o(wbs2_adr_o),
+    .wbs0_dat_i(wbs2_dat_i),
+    .wbs0_dat_o(wbs2_dat_o),
+    .wbs0_we_o (wbs2_we_o),
+    .wbs0_sel_o(wbs2_sel_o),
+    .wbs0_stb_o(wbs2_stb_o),
+    .wbs0_ack_i(wbs2_ack_i),
+    .wbs0_err_i('0),
+    .wbs0_rty_i('0),
+    .wbs0_cyc_o(wbs2_cyc_o),
+
+    // Slave interface 1 (to UART controller)
+    .wbs1_addr    (32'h1000_0000),
+    .wbs1_addr_msk(32'hF000_0000),
+
+    .wbs1_adr_o(wbs3_adr_o),
+    .wbs1_dat_i(wbs3_dat_i),
+    .wbs1_dat_o(wbs3_dat_o),
+    .wbs1_we_o (wbs3_we_o),
+    .wbs1_sel_o(wbs3_sel_o),
+    .wbs1_stb_o(wbs3_stb_o),
+    .wbs1_ack_i(wbs3_ack_i),
+    .wbs1_err_i('0),
+    .wbs1_rty_i('0),
+    .wbs1_cyc_o(wbs3_cyc_o)
+  );
+
+  wb_mux sram_mux (
+    .clk(sys_clk),
+    .rst(sys_rst),
+
+    // Master interface (to Lab5 master)
+    .wbm_adr_i(wbm_adr_o),
+    .wbm_dat_i(wbm_dat_o),
+    .wbm_dat_o(wbm_dat_i),
+    .wbm_we_i (wbm_we_o),
+    .wbm_sel_i(wbm_sel_o),
+    .wbm_stb_i(wbm_stb_o),
+    .wbm_ack_o(wbm_ack_i),
+    .wbm_err_o(),
+    .wbm_rty_o(),
+    .wbm_cyc_i(wbm_cyc_o),
+
+    // Slave interface 0 (to BaseRAM controller)
+    // Address range: 0x8000_0000 ~ 0x803F_FFFF
+    .wbs0_addr    (32'h8000_0000),
+    .wbs0_addr_msk(32'hFFC0_0000),
+
+    .wbs0_adr_o(wbs0_adr_o),
+    .wbs0_dat_i(wbs0_dat_i),
+    .wbs0_dat_o(wbs0_dat_o),
+    .wbs0_we_o (wbs0_we_o),
+    .wbs0_sel_o(wbs0_sel_o),
+    .wbs0_stb_o(wbs0_stb_o),
+    .wbs0_ack_i(wbs0_ack_i),
+    .wbs0_err_i('0),
+    .wbs0_rty_i('0),
+    .wbs0_cyc_o(wbs0_cyc_o),
+
+    // Slave interface 1 (to ExtRAM controller)
+    // Address range: 0x8040_0000 ~ 0x807F_FFFF
+    .wbs1_addr    (32'h8040_0000),
+    .wbs1_addr_msk(32'hFFC0_0000),
+
+    .wbs1_adr_o(wbs1_adr_o),
+    .wbs1_dat_i(wbs1_dat_i),
+    .wbs1_dat_o(wbs1_dat_o),
+    .wbs1_we_o (wbs1_we_o),
+    .wbs1_sel_o(wbs1_sel_o),
+    .wbs1_stb_o(wbs1_stb_o),
+    .wbs1_ack_i(wbs1_ack_i),
+    .wbs1_err_i('0),
+    .wbs1_rty_i('0),
+    .wbs1_cyc_o(wbs1_cyc_o)
+  );
+
+  /* =========== Wishbone MUX end =========== */
 
   /* =========== Central Processing Unit begin =========== */
 
