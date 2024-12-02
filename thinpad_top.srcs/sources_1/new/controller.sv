@@ -41,8 +41,8 @@ module controller(
             stall_ex_mem_o=1'b1;
             bubble_ex_mem_o=1'b0;
 
-            stall_mem_wb_o=1'b0;
-            bubble_mem_wb_o=1'b1;
+            stall_mem_wb_o=1'b1;
+            bubble_mem_wb_o=1'b0;
         end else if (jump_i) begin // jump
             stall_if_id_o=1'b0;
             bubble_if_id_o=1'b1;

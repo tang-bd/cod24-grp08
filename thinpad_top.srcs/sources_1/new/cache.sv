@@ -100,7 +100,7 @@ module cache #(
         case (state)
             IDLE: begin
                 wb_ack_o = 1'b0;
-                if (wb_cyc_i && wb_stb_i && wb_we_i) begin
+                if (wb_cyc_i && wb_stb_i && (wb_we_i || !match)) begin
                     mem_cyc_o = wb_cyc_i;
                     mem_stb_o = wb_stb_i;
                     mem_adr_o = wb_adr_i;
@@ -208,8 +208,10 @@ module cache #(
                     if (wb_stb_i && wb_cyc_i) begin
                         if (wb_we_i) begin
                             state <= WRITE_MEM;
-                        end else begin
+                        end else if (match) begin
                             state <= READ_CACHE;
+                        end else begin
+                            state <= READ_MEM;
                         end
                     end else if (fence_i) begin
                         for (int i = 0; i < (1 << INDEX_WIDTH); i = i + 1) begin
@@ -230,8 +232,10 @@ module cache #(
                 end
                 READ_MEM: begin
                     if (mem_ack_i) begin
-                        valid_array[addr_index][lru_array[addr_index]] <= 1'b1;
-                        lru_array[addr_index] <= (lru_array[addr_index] + 1) % SET_SIZE;
+                        if (match) begin
+                            valid_array[addr_index][lru_array[addr_index]] <= 1'b1;
+                            lru_array[addr_index] <= (lru_array[addr_index] + 1) % SET_SIZE;
+                        end
                         state <= IDLE;
                     end
                 end

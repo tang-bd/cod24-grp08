@@ -179,6 +179,8 @@ module cpu (
         .clk_i(clk_i),
         .rst_i(rst_i),
 
+        .stall_i(stall_ex_mem),
+
         .inst_op_i(inst_op_ex_mem),
         .inst_type_i(inst_type_ex_mem),
         .alu_y_i(alu_y_ex_mem),
