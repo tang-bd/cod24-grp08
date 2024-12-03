@@ -63,16 +63,16 @@ module cpu (
     input wire [31:0] mip_i,
     output reg [31:0] mip_o,
     output wire mip_we,
-    input wire [31:0] mtime0_i,
+    input wire [63:0] mtime_i,
+    output reg [63:0] mtime_o,
     output reg [31:0] mtime0_o,
     output wire mtime0_we,
-    input wire [31:0] mtime1_i,
     output reg [31:0] mtime1_o,
     output wire mtime1_we,
-    input wire [31:0] mtimecmp0_i,
+    input wire [63:0] mtimecmp_i,
+    output reg [63:0] mtimecmp_o,
     output reg [31:0] mtimecmp0_o,
     output wire mtimecmp0_we,
-    input wire [31:0] mtimecmp1_i,
     output reg [31:0] mtimecmp1_o,
     output wire mtimecmp1_we,
 
@@ -187,6 +187,9 @@ module cpu (
         .csr_wdata_o(csr_wdata_o),
         .csr_we_o(csr_we_o),
 
+        .mtime_i(mtime_i),
+        .mtimecmp_i(mtimecmp_i),
+
         .mstatus_i(mstatus_i),
         .mstatus_o(mstatus_o),
         .mstatus_we(mstatus_we),
@@ -259,19 +262,17 @@ module cpu (
         .rf_wdata_o(rf_wdata_mem),
         .rf_we_o(rf_we_mem),
 
-        .mtime0_i(mtime0_i),
+        .mtime_i(mtime_i),
+        .mtime_o(mtime_o),
         .mtime0_o(mtime0_o),
         .mtime0_we(mtime0_we),
-
-        .mtime1_i(mtime1_i),
         .mtime1_o(mtime1_o),
         .mtime1_we(mtime1_we),
 
-        .mtimecmp0_i(mtimecmp0_i),
+        .mtimecmp_i(mtimecmp_i),
+        .mtimecmp_o(mtimecmp_o),
         .mtimecmp0_o(mtimecmp0_o),
         .mtimecmp0_we(mtimecmp0_we),
-
-        .mtimecmp1_i(mtimecmp1_i),
         .mtimecmp1_o(mtimecmp1_o),
         .mtimecmp1_we(mtimecmp1_we),
 

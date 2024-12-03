@@ -11,19 +11,17 @@ module MEM(
     output reg [31:0] rf_wdata_o,
     output reg rf_we_o,
 
-    input wire [31:0] mtime0_i,
+    input reg [63:0] mtime_i,
+    output reg [63:0] mtime_o,
     output reg [31:0] mtime0_o,
     output reg mtime0_we,
-
-    input wire [31:0] mtime1_i,
     output reg [31:0] mtime1_o,
     output reg mtime1_we,
 
-    input wire [31:0] mtimecmp0_i,
+    input reg [63:0] mtimecmp_i,
+    output reg [63:0] mtimecmp_o,
     output reg [31:0] mtimecmp0_o,
     output reg mtimecmp0_we,
-
-    input wire [31:0] mtimecmp1_i,
     output reg [31:0] mtimecmp1_o,
     output reg mtimecmp1_we,
 
@@ -38,6 +36,7 @@ module MEM(
     output reg wb_we_o
 );
     reg [31:0] rf_wdata_reg;
+    reg [6:0] time_reg;
     reg data_ready;
 
     always_comb begin
@@ -58,9 +57,15 @@ module MEM(
     always_ff @(posedge clk_i) begin
         if (rst_i) begin
             rf_wdata_reg <= 32'h0;
+            time_reg <= 7'h0;
             data_ready <= 0;
             rf_we_o <= 0;
         end else begin
+            time_reg <= (time_reg + 1) % 100;
+            mtime0_we <= 0;
+            mtime1_we <= 0;
+            mtimecmp0_we <= 0;
+            mtimecmp1_we <= 0;
             if (stall_i) begin
                 if (!data_ready) begin
                     case (inst_type_i)
@@ -333,10 +338,11 @@ module MEM(
             end else begin
                 data_ready <= 0;
 
-                mtime0_we <= 0;
-                mtime1_we <= 0;
-                mtimecmp0_we <= 0;
-                mtimecmp1_we <= 0;
+                if (time_reg == 99) begin
+                    mtime_o <= mtime_i + 1;
+                    mtime0_we <= 1;
+                    mtime1_we <= 1;
+                end
             end
 
             if (wb_ack_i) begin
@@ -346,13 +352,13 @@ module MEM(
                     end
                     default: begin
                         if (alu_y_i == `CLINT_MTIME) begin
-                            rf_wdata_reg <= mtime0_i;
+                            rf_wdata_reg <= mtime_i[31:0];
                         end else if (alu_y_i == `CLINT_MTIME + 4) begin
-                            rf_wdata_reg <= mtime1_i;
+                            rf_wdata_reg <= mtime_i[63:32];
                         end else if (alu_y_i == `CLINT_MTIMECMP) begin
-                            rf_wdata_reg <= mtimecmp0_i;
+                            rf_wdata_reg <= mtimecmp_i[31:0];
                         end else if (alu_y_i == `CLINT_MTIMECMP + 4) begin
-                            rf_wdata_reg <= mtimecmp1_i;
+                            rf_wdata_reg <= mtimecmp_i[63:32];
                         end else begin
                             rf_wdata_reg <= wb_dat_i;
                         end

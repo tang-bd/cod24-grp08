@@ -34,6 +34,9 @@ module EX(
     output reg [31:0] csr_wdata_o,
     output reg csr_we_o,
 
+    input wire [63:0] mtime_i,
+    input wire [63:0] mtimecmp_i,
+
     input wire [31:0] mstatus_i,
     output reg [31:0] mstatus_o,
     output reg mstatus_we,
@@ -110,223 +113,238 @@ module EX(
         mip_o = 0;
         mip_we = 0;
 
-        case (inst_type_i)
-            R_TYPE: begin
-                jump_o = 0;
-                jump_addr_o = pc_i;
-                case (inst_op_i)
-                    ADD: alu_op_o = ALU_ADD;
-                    SLTU: alu_op_o = ALU_SLTU;
-                    AND: alu_op_o = ALU_AND;
-                    OR: alu_op_o = ALU_OR;
-                    XOR: alu_op_o = ALU_XOR;
-                    SBSET: alu_op_o = ALU_SBSET;
-                    default: alu_op_o = ALU_ADD;
-                endcase
-                alu_a_o = rf_rdata_a;
-                alu_b_o = rf_rdata_b_o;
-            end
-            I_TYPE: begin
-                case (inst_op_i)
-                    ADDI: begin
-                        jump_o = 0;
-                        jump_addr_o = pc_i;
-                        alu_op_o = ALU_ADD;
-                        alu_a_o = rf_rdata_a;
-                        alu_b_o = imm_gen_data_i;
-                    end
-                    ANDI: begin
-                        jump_o = 0;
-                        jump_addr_o = pc_i;
-                        alu_op_o = ALU_AND;
-                        alu_a_o = rf_rdata_a;
-                        alu_b_o = imm_gen_data_i;
-                    end
-                    ORI: begin
-                        jump_o = 0;
-                        jump_addr_o = pc_i;
-                        alu_op_o = ALU_OR;
-                        alu_a_o = rf_rdata_a;
-                        alu_b_o = imm_gen_data_i;
-                    end
-                    SLLI: begin
-                        jump_o = 0;
-                        jump_addr_o = pc_i;
-                        alu_op_o = ALU_SLL;
-                        alu_a_o = rf_rdata_a;
-                        alu_b_o = imm_gen_data_i;
-                    end
-                    SRLI: begin
-                        jump_o = 0;
-                        jump_addr_o = pc_i;
-                        alu_op_o = ALU_SRL;
-                        alu_a_o = rf_rdata_a;
-                        alu_b_o = imm_gen_data_i;
-                    end
-                    LB: begin
-                        jump_o = 0;
-                        jump_addr_o = pc_i;
-                        alu_op_o = ALU_ADD;
-                        alu_a_o = rf_rdata_a;
-                        alu_b_o = imm_gen_data_i;
-                    end
-                    LW: begin
-                        jump_o = 0;
-                        jump_addr_o = pc_i;
-                        alu_op_o = ALU_ADD;
-                        alu_a_o = rf_rdata_a;
-                        alu_b_o = imm_gen_data_i;
-                    end
-                    JALR: begin
-                        jump_o = 1;
-                        jump_addr_o = rf_rdata_a + imm_gen_data_i;
-                        alu_op_o = ALU_ADD;
-                        alu_a_o = pc_i;
-                        alu_b_o = imm_gen_data_i;
-                    end
-                    PCNT: begin
-                        jump_o = 0;
-                        jump_addr_o = pc_i;
-                        alu_op_o = ALU_PCNT;
-                        alu_a_o = rf_rdata_a;
-                        alu_b_o = 0;
-                    end
-                    CTZ: begin
-                        jump_o = 0;
-                        jump_addr_o = pc_i;
-                        alu_op_o = ALU_CTZ;
-                        alu_a_o = rf_rdata_a;
-                        alu_b_o = 0;
-                    end
-                    CSRRW: begin
-                        jump_o = 0;
-                        jump_addr_o = pc_i;
-                        alu_op_o = ALU_ADD;
-                        alu_a_o = csr_rdata_reg;
-                        alu_b_o = 0;
+        if (mtime_i > mtimecmp_i && mie_i == (1 << 7) && mtimecmp_i > 0) begin
+            jump_o = 1;
+            jump_addr_o = mtvec_i;
+            alu_op_o = ALU_ADD;
+            alu_a_o = 0;
+            alu_b_o = 0;
 
-                        csr_raddr_o = imm_gen_data_i;
-                        csr_waddr_o = imm_gen_data_i;
-                        csr_wdata_o = rf_rdata_a;
-                    end
-                    CSRRS: begin
-                        jump_o = 0;
-                        jump_addr_o = pc_i;
-                        alu_op_o = ALU_ADD;
-                        alu_a_o = csr_rdata_reg;
-                        alu_b_o = 0;
+            privilege_mode_o = 2'b11;
+            privilege_mode_we = 1;
+            mepc_o = pc_i;
+            mepc_we = 1;
+            mcause_o = `EX_INT_FLAG;
+            mcause_we = 1;
+        end else begin
+            case (inst_type_i)
+                R_TYPE: begin
+                    jump_o = 0;
+                    jump_addr_o = pc_i;
+                    case (inst_op_i)
+                        ADD: alu_op_o = ALU_ADD;
+                        SLTU: alu_op_o = ALU_SLTU;
+                        AND: alu_op_o = ALU_AND;
+                        OR: alu_op_o = ALU_OR;
+                        XOR: alu_op_o = ALU_XOR;
+                        SBSET: alu_op_o = ALU_SBSET;
+                        default: alu_op_o = ALU_ADD;
+                    endcase
+                    alu_a_o = rf_rdata_a;
+                    alu_b_o = rf_rdata_b_o;
+                end
+                I_TYPE: begin
+                    case (inst_op_i)
+                        ADDI: begin
+                            jump_o = 0;
+                            jump_addr_o = pc_i;
+                            alu_op_o = ALU_ADD;
+                            alu_a_o = rf_rdata_a;
+                            alu_b_o = imm_gen_data_i;
+                        end
+                        ANDI: begin
+                            jump_o = 0;
+                            jump_addr_o = pc_i;
+                            alu_op_o = ALU_AND;
+                            alu_a_o = rf_rdata_a;
+                            alu_b_o = imm_gen_data_i;
+                        end
+                        ORI: begin
+                            jump_o = 0;
+                            jump_addr_o = pc_i;
+                            alu_op_o = ALU_OR;
+                            alu_a_o = rf_rdata_a;
+                            alu_b_o = imm_gen_data_i;
+                        end
+                        SLLI: begin
+                            jump_o = 0;
+                            jump_addr_o = pc_i;
+                            alu_op_o = ALU_SLL;
+                            alu_a_o = rf_rdata_a;
+                            alu_b_o = imm_gen_data_i;
+                        end
+                        SRLI: begin
+                            jump_o = 0;
+                            jump_addr_o = pc_i;
+                            alu_op_o = ALU_SRL;
+                            alu_a_o = rf_rdata_a;
+                            alu_b_o = imm_gen_data_i;
+                        end
+                        LB: begin
+                            jump_o = 0;
+                            jump_addr_o = pc_i;
+                            alu_op_o = ALU_ADD;
+                            alu_a_o = rf_rdata_a;
+                            alu_b_o = imm_gen_data_i;
+                        end
+                        LW: begin
+                            jump_o = 0;
+                            jump_addr_o = pc_i;
+                            alu_op_o = ALU_ADD;
+                            alu_a_o = rf_rdata_a;
+                            alu_b_o = imm_gen_data_i;
+                        end
+                        JALR: begin
+                            jump_o = 1;
+                            jump_addr_o = rf_rdata_a + imm_gen_data_i;
+                            alu_op_o = ALU_ADD;
+                            alu_a_o = pc_i;
+                            alu_b_o = imm_gen_data_i;
+                        end
+                        PCNT: begin
+                            jump_o = 0;
+                            jump_addr_o = pc_i;
+                            alu_op_o = ALU_PCNT;
+                            alu_a_o = rf_rdata_a;
+                            alu_b_o = 0;
+                        end
+                        CTZ: begin
+                            jump_o = 0;
+                            jump_addr_o = pc_i;
+                            alu_op_o = ALU_CTZ;
+                            alu_a_o = rf_rdata_a;
+                            alu_b_o = 0;
+                        end
+                        CSRRW: begin
+                            jump_o = 0;
+                            jump_addr_o = pc_i;
+                            alu_op_o = ALU_ADD;
+                            alu_a_o = csr_rdata_reg;
+                            alu_b_o = 0;
 
-                        csr_raddr_o = imm_gen_data_i;
-                        csr_waddr_o = imm_gen_data_i;
-                        csr_wdata_o = csr_rdata_reg | rf_rdata_a;
-                    end
-                    CSRRC: begin
-                        jump_o = 0;
-                        jump_addr_o = pc_i;
-                        alu_op_o = ALU_ADD;
-                        alu_a_o = csr_rdata_reg;
-                        alu_b_o = 0;
+                            csr_raddr_o = imm_gen_data_i;
+                            csr_waddr_o = imm_gen_data_i;
+                            csr_wdata_o = rf_rdata_a;
+                        end
+                        CSRRS: begin
+                            jump_o = 0;
+                            jump_addr_o = pc_i;
+                            alu_op_o = ALU_ADD;
+                            alu_a_o = csr_rdata_reg;
+                            alu_b_o = 0;
 
-                        csr_raddr_o = imm_gen_data_i;
-                        csr_waddr_o = imm_gen_data_i;
-                        csr_wdata_o = csr_rdata_reg & ~rf_rdata_a;
-                    end
-                    ECALL: begin
-                        jump_o = 1;
-                        jump_addr_o = mtvec_i;
-                        alu_op_o = ALU_ADD;
-                        alu_a_o = 0;
-                        alu_b_o = 0;
+                            csr_raddr_o = imm_gen_data_i;
+                            csr_waddr_o = imm_gen_data_i;
+                            csr_wdata_o = csr_rdata_reg | rf_rdata_a;
+                        end
+                        CSRRC: begin
+                            jump_o = 0;
+                            jump_addr_o = pc_i;
+                            alu_op_o = ALU_ADD;
+                            alu_a_o = csr_rdata_reg;
+                            alu_b_o = 0;
 
-                        
-                        privilege_mode_o = 2'b11;
-                        privilege_mode_we = 1;
-                        mepc_o = pc_i;
-                        mepc_we = 1;
-                        mcause_o = `EX_ECALL_U;
-                        mcause_we = 1;
-                    end
-                    EBREAK: begin
-                        jump_o = 1;
-                        jump_addr_o = mtvec_i;
-                        alu_op_o = ALU_ADD;
-                        alu_a_o = 0;
-                        alu_b_o = 0;
+                            csr_raddr_o = imm_gen_data_i;
+                            csr_waddr_o = imm_gen_data_i;
+                            csr_wdata_o = csr_rdata_reg & ~rf_rdata_a;
+                        end
+                        ECALL: begin
+                            jump_o = 1;
+                            jump_addr_o = mtvec_i;
+                            alu_op_o = ALU_ADD;
+                            alu_a_o = 0;
+                            alu_b_o = 0;
 
-                        privilege_mode_o = 2'b11;
-                        privilege_mode_we = 1;
-                        mepc_o = pc_i;
-                        mepc_we = 1;
-                        mcause_o = `EX_BREAK;
-                        mcause_we = 1;
-                    end
-                    MRET: begin
-                        jump_o = 1;
-                        jump_addr_o = mepc_i;
-                        alu_op_o = ALU_ADD;
-                        alu_a_o = 0;
-                        alu_b_o = 0;
+                            
+                            privilege_mode_o = 2'b11;
+                            privilege_mode_we = 1;
+                            mepc_o = pc_i;
+                            mepc_we = 1;
+                            mcause_o = `EX_ECALL_U;
+                            mcause_we = 1;
+                        end
+                        EBREAK: begin
+                            jump_o = 1;
+                            jump_addr_o = mtvec_i;
+                            alu_op_o = ALU_ADD;
+                            alu_a_o = 0;
+                            alu_b_o = 0;
 
-                        privilege_mode_o = mstatus_i[12:11];
-                        privilege_mode_we = 1;
-                    end
-                    default: begin
-                        jump_o = 0;
-                        jump_addr_o = pc_i;
-                        alu_op_o = ALU_ADD;
-                        alu_a_o = 0;
-                        alu_b_o = 0;
-                    end
-                endcase
-            end
-            S_TYPE: begin
-                jump_o = 0;
-                jump_addr_o = pc_i;
-                case (inst_op_i)
-                    SB: alu_op_o = ALU_ADD;
-                    SW: alu_op_o = ALU_ADD;
-                    default: alu_op_o = ALU_ADD;
-                endcase
-                alu_a_o = rf_rdata_a;
-                alu_b_o = imm_gen_data_i;
-            end
-            B_TYPE: begin
-                case (inst_op_i)
-                    BEQ: jump_o = rf_rdata_a == rf_rdata_b_o;
-                    BNE: jump_o = rf_rdata_a != rf_rdata_b_o;
-                    default: jump_o = 0;
-                endcase
-                jump_addr_o = pc_i + imm_gen_data_i;
-                alu_op_o = ALU_ADD;
-                alu_a_o = rf_rdata_a;
-                alu_b_o = rf_rdata_b_o;
-            end
-            U_TYPE: begin
-                jump_o = 0;
-                jump_addr_o = pc_i;
-                alu_op_o = ALU_ADD;
-                case (inst_op_i)
-                    LUI: alu_a_o = 0;
-                    AUIPC: alu_a_o = pc_i;
-                    default: alu_a_o = 0;
-                endcase
-                alu_b_o = imm_gen_data_i;
-            end
-            J_TYPE: begin
-                jump_o = 1;
-                jump_addr_o = pc_i + imm_gen_data_i;
-                alu_op_o = ALU_ADD;
-                alu_a_o = pc_i;
-                alu_b_o = imm_gen_data_i;
-            end
-            default: begin
-                jump_o = 0;
-                jump_addr_o = pc_i;
-                alu_op_o = ALU_ADD;
-                alu_a_o = 0;
-                alu_b_o = 0;
-            end
-        endcase
+                            privilege_mode_o = 2'b11;
+                            privilege_mode_we = 1;
+                            mepc_o = pc_i;
+                            mepc_we = 1;
+                            mcause_o = `EX_BREAK;
+                            mcause_we = 1;
+                        end
+                        MRET: begin
+                            jump_o = 1;
+                            jump_addr_o = mepc_i;
+                            alu_op_o = ALU_ADD;
+                            alu_a_o = 0;
+                            alu_b_o = 0;
+
+                            privilege_mode_o = mstatus_i[12:11];
+                            privilege_mode_we = 1;
+                        end
+                        default: begin
+                            jump_o = 0;
+                            jump_addr_o = pc_i;
+                            alu_op_o = ALU_ADD;
+                            alu_a_o = 0;
+                            alu_b_o = 0;
+                        end
+                    endcase
+                end
+                S_TYPE: begin
+                    jump_o = 0;
+                    jump_addr_o = pc_i;
+                    case (inst_op_i)
+                        SB: alu_op_o = ALU_ADD;
+                        SW: alu_op_o = ALU_ADD;
+                        default: alu_op_o = ALU_ADD;
+                    endcase
+                    alu_a_o = rf_rdata_a;
+                    alu_b_o = imm_gen_data_i;
+                end
+                B_TYPE: begin
+                    case (inst_op_i)
+                        BEQ: jump_o = rf_rdata_a == rf_rdata_b_o;
+                        BNE: jump_o = rf_rdata_a != rf_rdata_b_o;
+                        default: jump_o = 0;
+                    endcase
+                    jump_addr_o = pc_i + imm_gen_data_i;
+                    alu_op_o = ALU_ADD;
+                    alu_a_o = rf_rdata_a;
+                    alu_b_o = rf_rdata_b_o;
+                end
+                U_TYPE: begin
+                    jump_o = 0;
+                    jump_addr_o = pc_i;
+                    alu_op_o = ALU_ADD;
+                    case (inst_op_i)
+                        LUI: alu_a_o = 0;
+                        AUIPC: alu_a_o = pc_i;
+                        default: alu_a_o = 0;
+                    endcase
+                    alu_b_o = imm_gen_data_i;
+                end
+                J_TYPE: begin
+                    jump_o = 1;
+                    jump_addr_o = pc_i + imm_gen_data_i;
+                    alu_op_o = ALU_ADD;
+                    alu_a_o = pc_i;
+                    alu_b_o = imm_gen_data_i;
+                end
+                default: begin
+                    jump_o = 0;
+                    jump_addr_o = pc_i;
+                    alu_op_o = ALU_ADD;
+                    alu_a_o = 0;
+                    alu_b_o = 0;
+                end
+            endcase
+        end
     end
 
     always_ff @(posedge clk_i) begin
