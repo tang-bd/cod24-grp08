@@ -161,6 +161,17 @@ module MEM(
                                         wb_we_o <= 0;
 
                                         data_ready <= 1;
+                                        if (alu_y_i == `CLINT_MTIME) begin
+                                            rf_wdata_reg <= mtime_i[31:0];
+                                        end else if (alu_y_i == `CLINT_MTIME + 4) begin
+                                            rf_wdata_reg <= mtime_i[63:32];
+                                        end else if (alu_y_i == `CLINT_MTIMECMP) begin
+                                            rf_wdata_reg <= mtimecmp_i[31:0];
+                                        end else if (alu_y_i == `CLINT_MTIMECMP + 4) begin
+                                            rf_wdata_reg <= mtimecmp_i[63:32];
+                                        end else begin
+                                            rf_wdata_reg <= wb_dat_i;
+                                        end
                                     end else begin
                                         rf_we_o <= 1;
                                         fence_i_o <= 0;
@@ -351,17 +362,7 @@ module MEM(
                         rf_wdata_reg <= (wb_dat_i >> 8 * (wb_adr_o[1:0]));
                     end
                     default: begin
-                        if (alu_y_i == `CLINT_MTIME) begin
-                            rf_wdata_reg <= mtime_i[31:0];
-                        end else if (alu_y_i == `CLINT_MTIME + 4) begin
-                            rf_wdata_reg <= mtime_i[63:32];
-                        end else if (alu_y_i == `CLINT_MTIMECMP) begin
-                            rf_wdata_reg <= mtimecmp_i[31:0];
-                        end else if (alu_y_i == `CLINT_MTIMECMP + 4) begin
-                            rf_wdata_reg <= mtimecmp_i[63:32];
-                        end else begin
-                            rf_wdata_reg <= wb_dat_i;
-                        end
+                        rf_wdata_reg <= wb_dat_i;
                     end
                 endcase
                 if (stall_i) begin
