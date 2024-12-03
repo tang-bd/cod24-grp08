@@ -51,8 +51,9 @@ module mmu #(
     wire [TLB_OFFSET_WIDTH - 1:0] addr_tlb_offset = wb_adr_i[TLB_OFFSET_WIDTH - 1:0];
 
     // satp breakdown
-    wire satp_mode = satp_i[ADDR_WIDTH - 1];
-    wire [PPN_WIDTH - 1:0] satp_ppn = satp_i[PPN_WIDTH - 1:0];
+    logic [DATA_WIDTH - 1:0] satp_reg;
+    wire satp_mode = satp_reg[ADDR_WIDTH - 1];
+    wire [PPN_WIDTH - 1:0] satp_ppn = satp_reg[PPN_WIDTH - 1:0];
 
     logic [DATA_WIDTH - 1:0] pte_data;
     wire [PPN_WIDTH - 1:0] pte_ppn = pte_data[DATA_WIDTH - 3:DATA_WIDTH - PPN_WIDTH - 2];
@@ -169,6 +170,7 @@ module mmu #(
         if (rst_i) begin
             pte_data <= 0;
             pte_index <= 1;
+            satp_reg <= 0;
             for (int i = 0; i < 1 << TLB_INDEX_WIDTH; i = i + 1) begin
                 tlb_valid[i] <= 0;
                 tlb_lru[i] <= 0;
@@ -194,7 +196,7 @@ module mmu #(
                         end else begin
                             state <= READ_PTE;
                         end
-                    end if (sfence_vma_i) begin
+                    end else if (sfence_vma_i) begin
                         for (int i = 0; i < 1 << TLB_INDEX_WIDTH; i = i + 1) begin
                             tlb_valid[i] <= 0;
                             tlb_lru[i] <= 0;
@@ -203,6 +205,8 @@ module mmu #(
                                 tlb_data[i][j] <= 0;
                             end
                         end
+                    end else begin
+                        satp_reg <= satp_i;
                     end
                 end
                 READ_PTE: begin
@@ -239,6 +243,7 @@ module mmu #(
                 TRANSLATE: begin
                     if (mem_ack_i) begin
                         pte_index <= 1;
+                        satp_reg <= satp_i;
                         state <= IDLE;
                     end
                 end
