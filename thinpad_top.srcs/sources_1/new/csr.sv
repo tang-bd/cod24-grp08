@@ -8,6 +8,10 @@ module csr(
     input reg [31:0] csr_wdata,
     input wire csr_we,
 
+    input wire [2:0] privilege_mode_i,
+    output reg [2:0] privilege_mode_o,
+    input wire privilege_mode_we,
+
     input wire [31:0] mstatus_i,
     output reg [31:0] mstatus_o,
     input wire mstatus_we,
@@ -93,6 +97,10 @@ module csr(
                         mip_o <= csr_wdata;
                     end
                 endcase
+            end
+
+            if (privilege_mode_we) begin
+                privilege_mode_o <= privilege_mode_i;
             end
 
             if (mstatus_we) begin

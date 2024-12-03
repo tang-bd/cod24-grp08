@@ -226,6 +226,10 @@ module thinpad_top (
     .csr_waddr(csr_waddr),
     .csr_we(csr_we),
 
+    .privilege_mode_i(privilege_mode_i),
+    .privilege_mode_o(privilege_mode_o),
+    .privilege_mode_we(privilege_mode_we),
+
     .mstatus_i(mstatus_i),
     .mstatus_o(mstatus_o),
     .mstatus_we(mstatus_we),
@@ -277,7 +281,8 @@ module thinpad_top (
 
   /* =========== MMU begin =========== */
 
-  logic [1:0] privilege_mode;
+  logic [1:0] privilege_mode_i, privilege_mode_o;
+  logic privilege_mode_we;
 
   logic wbm0_cyc_i, wbm0_stb_i, wbm0_ack_o;
   logic [31:0] wbm0_adr_i, wbm0_dat_i, wbm0_dat_o;
@@ -303,7 +308,7 @@ module thinpad_top (
       .clk_i(sys_clk),
       .rst_i(sys_rst),
 
-      .privilege_mode_i(privilege_mode),
+      .privilege_mode_i(privilege_mode_o),
       .satp_i(satp_o),
 
       .wb_cyc_i(wbm0_cyc_i),
@@ -329,7 +334,7 @@ module thinpad_top (
       .clk_i(sys_clk),
       .rst_i(sys_rst),
 
-      .privilege_mode_i(privilege_mode),
+      .privilege_mode_i(privilege_mode_o),
       .satp_i(satp_o),
 
       .wb_cyc_i(wbs3_cyc_o),
@@ -690,7 +695,8 @@ module thinpad_top (
   cpu cpu(
     .clk_i(sys_clk),
     .rst_i(sys_rst),
-    .privilege_mode_o(privilege_mode),
+    .privilege_mode_o(privilege_mode_i),
+    .privilege_mode_we(privilege_mode_we),
     .fence_i_o(fence_i),
     .wbm0_cyc_o(wbm0_cyc_i),
     .wbm0_stb_o(wbm0_stb_i),

@@ -5,6 +5,7 @@ module cpu (
     input wire rst_i,
 
     output reg [1:0] privilege_mode_o,
+    output reg privilege_mode_we,
 
     // wishbone
     output reg fence_i_o,
@@ -178,6 +179,7 @@ module cpu (
         .rf_we_i(rf_we_o),
 
         .privilege_mode_o(privilege_mode_o),
+        .privilege_mode_we(privilege_mode_we),
 
         .csr_raddr_o(csr_raddr_o),
         .csr_rdata_i(csr_rdata_i),

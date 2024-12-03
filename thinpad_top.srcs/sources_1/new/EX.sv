@@ -26,6 +26,7 @@ module EX(
     input wire csr_we_ex_mem_i,
 
     output reg [1:0] privilege_mode_o,
+    output reg privilege_mode_we,
 
     output reg [11:0] csr_raddr_o,
     input wire [31:0] csr_rdata_i,
@@ -92,6 +93,8 @@ module EX(
         csr_waddr_o = 0;
         csr_wdata_o = 0;
 
+        privilege_mode_o = 0;
+        privilege_mode_we = 0;
         mstatus_o = 0;
         mstatus_we = 0;
         mie_o = 0;
@@ -237,6 +240,7 @@ module EX(
 
                         
                         privilege_mode_o = 2'b11;
+                        privilege_mode_we = 1;
                         mepc_o = pc_i;
                         mepc_we = 1;
                         mcause_o = `EX_ECALL_U;
@@ -250,6 +254,7 @@ module EX(
                         alu_b_o = 0;
 
                         privilege_mode_o = 2'b11;
+                        privilege_mode_we = 1;
                         mepc_o = pc_i;
                         mepc_we = 1;
                         mcause_o = `EX_BREAK;
@@ -263,6 +268,7 @@ module EX(
                         alu_b_o = 0;
 
                         privilege_mode_o = mstatus_i[12:11];
+                        privilege_mode_we = 1;
                     end
                     default: begin
                         jump_o = 0;
@@ -325,7 +331,6 @@ module EX(
 
     always_ff @(posedge clk_i) begin
         if (rst_i) begin
-            privilege_mode_o <= 2'b11;
             csr_rdata_reg <= 0;
             csr_we_o <= 0;
         end else begin
