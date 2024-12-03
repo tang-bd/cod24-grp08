@@ -66,144 +66,146 @@ module tb;
 
     uart.pc_send_byte(8'h57);  // 'W'
     #200;
-    uart.pc_send_byte(8'h41);  // 1
-    #200;
-    uart.pc_send_byte(8'h00);
-    #200;
-    uart.pc_send_byte(8'h00);
-    #200;
-    uart.pc_send_byte(8'h10);
-    #200;
-    uart.pc_send_byte(8'h80);
-    #200;
 
-    uart.pc_send_byte(8'h04);
-    #200;
-    uart.pc_send_byte(8'h00);
-    #200;
-    uart.pc_send_byte(8'h00);
-    #200;
-    uart.pc_send_byte(8'h00);
-    #200;
+    // uart.pc_send_byte(8'h04);
+    // #200;
+    // uart.pc_send_byte(8'h00);
+    // #200;
+    // uart.pc_send_byte(8'h00);
+    // #200;
+    // uart.pc_send_byte(8'h00);
+    // #200;
 
-    uart.pc_send_byte(8'h37);
-    #200;
-    uart.pc_send_byte(8'h05);
-    #200;
-    uart.pc_send_byte(8'hc1);
-    #200;
-    uart.pc_send_byte(8'h7f);
-    #200;
+    // uart.pc_send_byte(8'h37);
+    // #200;
+    // uart.pc_send_byte(8'h05);
+    // #200;
+    // uart.pc_send_byte(8'hc1);
+    // #200;
+    // uart.pc_send_byte(8'h7f);
+    // #200;
 
-    uart.pc_send_byte(8'h41);  // 2
-    #200;
+    // uart.pc_send_byte(8'h41);  // 2
+    // #200;
 
-    uart.pc_send_byte(8'h04);
-    #200;
-    uart.pc_send_byte(8'h00);
-    #200;
-    uart.pc_send_byte(8'h10);
-    #200;
-    uart.pc_send_byte(8'h80);
-    #200;
+    // uart.pc_send_byte(8'h04);
+    // #200;
+    // uart.pc_send_byte(8'h00);
+    // #200;
+    // uart.pc_send_byte(8'h10);
+    // #200;
+    // uart.pc_send_byte(8'h80);
+    // #200;
     
-    uart.pc_send_byte(8'h04);
-    #200;
-    uart.pc_send_byte(8'h00);
-    #200;
-    uart.pc_send_byte(8'h00);
-    #200;
-    uart.pc_send_byte(8'h00);
-    #200;
+    // uart.pc_send_byte(8'h04);
+    // #200;
+    // uart.pc_send_byte(8'h00);
+    // #200;
+    // uart.pc_send_byte(8'h00);
+    // #200;
+    // uart.pc_send_byte(8'h00);
+    // #200;
 
-    uart.pc_send_byte(8'h03);
-    #200;
-    uart.pc_send_byte(8'h2e);
-    #200;
-    uart.pc_send_byte(8'h05);
-    #200;
-    uart.pc_send_byte(8'h00);
-    #200;
+    // uart.pc_send_byte(8'h03);
+    // #200;
+    // uart.pc_send_byte(8'h2e);
+    // #200;
+    // uart.pc_send_byte(8'h05);
+    // #200;
+    // uart.pc_send_byte(8'h00);
+    // #200;
 
-    uart.pc_send_byte(8'h41);  // 3
-    #200;
+    // uart.pc_send_byte(8'h41);  // 3
+    // #200;
 
-    uart.pc_send_byte(8'h08);
-    #200;
-    uart.pc_send_byte(8'h00);
-    #200;
-    uart.pc_send_byte(8'h10);
-    #200;
-    uart.pc_send_byte(8'h80);
-    #200;
+    // uart.pc_send_byte(8'h08);
+    // #200;
+    // uart.pc_send_byte(8'h00);
+    // #200;
+    // uart.pc_send_byte(8'h10);
+    // #200;
+    // uart.pc_send_byte(8'h80);
+    // #200;
     
-    uart.pc_send_byte(8'h04);
-    #200;
-    uart.pc_send_byte(8'h00);
-    #200;
-    uart.pc_send_byte(8'h00);
-    #200;
-    uart.pc_send_byte(8'h00);
-    #200;
+    // uart.pc_send_byte(8'h04);
+    // #200;
+    // uart.pc_send_byte(8'h00);
+    // #200;
+    // uart.pc_send_byte(8'h00);
+    // #200;
+    // uart.pc_send_byte(8'h00);
+    // #200;
 
-    uart.pc_send_byte(8'h23);
-    #200;
-    uart.pc_send_byte(8'h20);
-    #200;
-    uart.pc_send_byte(8'hc5);
-    #200;
-    uart.pc_send_byte(8'h01);
-    #200;
+    // uart.pc_send_byte(8'h23);
+    // #200;
+    // uart.pc_send_byte(8'h20);
+    // #200;
+    // uart.pc_send_byte(8'hc5);
+    // #200;
+    // uart.pc_send_byte(8'h01);
+    // #200;
 
-    uart.pc_send_byte(8'h41);  // 4
-    #200;
+    // uart.pc_send_byte(8'h41);  // 4
+    // #200;
 
-    uart.pc_send_byte(8'h0c);
-    #200;
-    uart.pc_send_byte(8'h00);
-    #200;
-    uart.pc_send_byte(8'h10);
-    #200;
-    uart.pc_send_byte(8'h80);
-    #200;
+    // uart.pc_send_byte(8'h0c);
+    // #200;
+    // uart.pc_send_byte(8'h00);
+    // #200;
+    // uart.pc_send_byte(8'h10);
+    // #200;
+    // uart.pc_send_byte(8'h80);
+    // #200;
     
-    uart.pc_send_byte(8'h04);
-    #200;
-    uart.pc_send_byte(8'h00);
-    #200;
-    uart.pc_send_byte(8'h00);
-    #200;
-    uart.pc_send_byte(8'h00);
-    #200;
+    // uart.pc_send_byte(8'h04);
+    // #200;
+    // uart.pc_send_byte(8'h00);
+    // #200;
+    // uart.pc_send_byte(8'h00);
+    // #200;
+    // uart.pc_send_byte(8'h00);
+    // #200;
 
-    uart.pc_send_byte(8'h67);
-    #200;
-    uart.pc_send_byte(8'h80);
-    #200;
-    uart.pc_send_byte(8'h00);
-    #200;
-    uart.pc_send_byte(8'h00);
-    #200;
+    // uart.pc_send_byte(8'h67);
+    // #200;
+    // uart.pc_send_byte(8'h80);
+    // #200;
+    // uart.pc_send_byte(8'h00);
+    // #200;
+    // uart.pc_send_byte(8'h00);
+    // #200;
 
-    uart.pc_send_byte(8'h44);  // D
+    // uart.pc_send_byte(8'h44);  // D
+    // #200;
+    // uart.pc_send_byte(8'h00);
+    // #200;
+    // uart.pc_send_byte(8'h00);
+    // #200;
+    // uart.pc_send_byte(8'h10);
+    // #200;
+    // uart.pc_send_byte(8'h80);
+    // #200;
+
+    // uart.pc_send_byte(8'h00);
+    // #200;
+    // uart.pc_send_byte(8'h00);
+    // #200;
+    // uart.pc_send_byte(8'h00);
+    // #200;
+    // uart.pc_send_byte(8'h20);
+    // #200;
+
+    uart.pc_send_byte(8'h47);  // G
     #200;
-    uart.pc_send_byte(8'h00);
-    #200;
-    uart.pc_send_byte(8'h00);
+    uart.pc_send_byte(8'ha8);
     #200;
     uart.pc_send_byte(8'h10);
     #200;
+    uart.pc_send_byte(8'h00);
+    #200;
     uart.pc_send_byte(8'h80);
     #200;
 
-    uart.pc_send_byte(8'h00);
-    #200;
-    uart.pc_send_byte(8'h00);
-    #200;
-    uart.pc_send_byte(8'h00);
-    #200;
-    uart.pc_send_byte(8'h20);
-    #200;
   end
 
   // 待测试用户设计

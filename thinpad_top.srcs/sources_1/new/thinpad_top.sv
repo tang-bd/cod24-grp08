@@ -193,7 +193,22 @@ module thinpad_top (
   logic [11:0] csr_waddr;
   logic csr_we;
 
-  logic [31:0] satp;
+  logic [31:0] mstatus_i, mstatus_o;
+  logic mstatus_we;
+  logic [31:0] mie_i, mie_o;
+  logic mie_we;
+  logic [31:0] mtvec_i, mtvec_o;
+  logic mtvec_we;
+  logic [31:0] mscratch_i, mscratch_o;
+  logic mscratch_we;
+  logic [31:0] mepc_i, mepc_o;
+  logic mepc_we;
+  logic [31:0] mcause_i, mcause_o;
+  logic mcause_we;
+  logic [31:0] mip_i, mip_o;
+  logic mip_we;
+
+  logic [31:0] satp_o;
 
   csr csr(
     .clk_i(sys_clk),
@@ -203,7 +218,36 @@ module thinpad_top (
     .csr_wdata(csr_wdata),
     .csr_waddr(csr_waddr),
     .csr_we(csr_we),
-    .satp_o(satp)
+
+    .mstatus_i(mstatus_i),
+    .mstatus_o(mstatus_o),
+    .mstatus_we(mstatus_we),
+
+    .mie_i(mie_i),
+    .mie_o(mie_o),
+    .mie_we(mie_we),
+
+    .mtvec_i(mtvec_i),
+    .mtvec_o(mtvec_o),
+    .mtvec_we(mtvec_we),
+
+    .mscratch_i(mscratch_i),
+    .mscratch_o(mscratch_o),
+    .mscratch_we(mscratch_we),
+
+    .mepc_i(mepc_i),
+    .mepc_o(mepc_o),
+    .mepc_we(mepc_we),
+
+    .mcause_i(mcause_i),
+    .mcause_o(mcause_o),
+    .mcause_we(mcause_we),
+
+    .mip_i(mip_i),
+    .mip_o(mip_o),
+    .mip_we(mip_we),
+
+    .satp_o(satp_o)
   );
 
   /* =========== CSR end =========== */
@@ -236,7 +280,7 @@ module thinpad_top (
       .clk_i(sys_clk),
       .rst_i(sys_rst),
 
-      .satp_i(satp),
+      .satp_i(satp_o),
       .sfence_vma_i(sfence_vma),
 
       .wb_cyc_i(wbm0_cyc_i),
@@ -262,7 +306,7 @@ module thinpad_top (
       .clk_i(sys_clk),
       .rst_i(sys_rst),
 
-      .satp_i(satp),
+      .satp_i(satp_o),
       .sfence_vma_i(sfence_vma),
 
       .wb_cyc_i(wbs3_cyc_o),
@@ -653,6 +697,27 @@ module thinpad_top (
     .csr_waddr_o(csr_waddr),
     .csr_wdata_o(csr_wdata),
     .csr_we_o(csr_we),
+    .mstatus_i(mstatus_o),
+    .mstatus_o(mstatus_i),
+    .mstatus_we(mstatus_we),
+    .mie_i(mie_o),
+    .mie_o(mie_i),
+    .mie_we(mie_we),
+    .mtvec_i(mtvec_o),
+    .mtvec_o(mtvec_i),
+    .mtvec_we(mtvec_we),
+    .mscratch_i(mscratch_o),
+    .mscratch_o(mscratch_i),
+    .mscratch_we(mscratch_we),
+    .mepc_i(mepc_o),
+    .mepc_o(mepc_i),
+    .mepc_we(mepc_we),
+    .mcause_i(mcause_o),
+    .mcause_o(mcause_i),
+    .mcause_we(mcause_we),
+    .mip_i(mip_o),
+    .mip_o(mip_i),
+    .mip_we(mip_we),
     .alu_a_o(alu_a),
     .alu_b_o(alu_b),
     .alu_op_o(alu_op),

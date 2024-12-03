@@ -8,18 +8,46 @@ module csr(
     input reg [31:0] csr_wdata,
     input wire csr_we,
 
+    input wire [31:0] mstatus_i,
     output reg [31:0] mstatus_o,
+    input wire mstatus_we,
+
+    input wire [31:0] mie_i,
     output reg [31:0] mie_o,
+    input wire mie_we,
+
+    input wire [31:0] mtvec_i,
     output reg [31:0] mtvec_o,
+    input wire mtvec_we,
+
+    input wire [31:0] mscratch_i,
     output reg [31:0] mscratch_o,
+    input wire mscratch_we,
+
+    input wire [31:0] mepc_i,
     output reg [31:0] mepc_o,
+    input wire mepc_we,
+
+    input wire [31:0] mcause_i,
     output reg [31:0] mcause_o,
+    input wire mcause_we,
+
+    input wire [31:0] mip_i,
     output reg [31:0] mip_o,
+    input wire mip_we,
+
     output reg [31:0] satp_o
 );
 
     always_ff @(posedge clk_i) begin
         if (rst_i) begin
+            mstatus_o <= 32'h0000_0000;
+            mie_o <= 32'h0000_0000;
+            mtvec_o <= 32'h0000_0000;
+            mscratch_o <= 32'h0000_0000;
+            mepc_o <= 32'h0000_0000;
+            mcause_o <= 32'h0000_0000;
+            mip_o <= 32'h0000_0000;
             satp_o <= 32'h0000_0000;
         end else begin
             if (csr_we) begin
@@ -49,6 +77,34 @@ module csr(
                         mip_o <= csr_wdata;
                     end
                 endcase
+            end
+
+            if (mstatus_we) begin
+                mstatus_o <= mstatus_i;
+            end
+
+            if (mie_we) begin
+                mie_o <= mie_i;
+            end
+
+            if (mtvec_we) begin
+                mtvec_o <= mtvec_i;
+            end
+
+            if (mscratch_we) begin
+                mscratch_o <= mscratch_i;
+            end
+
+            if (mepc_we) begin
+                mepc_o <= mepc_i;
+            end
+
+            if (mcause_we) begin
+                mcause_o <= mcause_i;
+            end
+
+            if (mip_we) begin
+                mip_o <= mip_i;
             end
         end
     end

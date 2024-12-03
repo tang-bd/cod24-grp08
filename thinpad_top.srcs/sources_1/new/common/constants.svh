@@ -60,4 +60,12 @@ typedef enum logic [4:0] {
     UNKNOWN_INST_OP = 31
 } inst_op_t;
 
+`define EX_BREAK 3
+`define EX_ECALL_U 8
+`define EX_INST_PAGE_FAULT 12
+`define EX_LOAD_PAGE_FAULT 13
+`define EX_STORE_PAGE_FAULT 15
+
+`define EX_INT_FLAG 32'h80000000
+
 `endif

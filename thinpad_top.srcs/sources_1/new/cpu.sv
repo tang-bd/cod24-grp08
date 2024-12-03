@@ -40,6 +40,27 @@ module cpu (
     output reg [11:0] csr_waddr_o,
     output reg [31:0] csr_wdata_o,
     output reg csr_we_o,
+    input wire [31:0] mstatus_i,
+    output reg [31:0] mstatus_o,
+    output wire mstatus_we,
+    input wire [31:0] mie_i,
+    output reg [31:0] mie_o,
+    output wire mie_we,
+    input wire [31:0] mtvec_i,
+    output reg [31:0] mtvec_o,
+    output wire mtvec_we,
+    input wire [31:0] mscratch_i,
+    output reg [31:0] mscratch_o,
+    output wire mscratch_we,
+    input wire [31:0] mepc_i,
+    output reg [31:0] mepc_o,
+    output wire mepc_we,
+    input wire [31:0] mcause_i,
+    output reg [31:0] mcause_o,
+    output wire mcause_we,
+    input wire [31:0] mip_i,
+    output reg [31:0] mip_o,
+    output wire mip_we,
 
     // alu
     output reg [31:0] alu_a_o,
@@ -117,6 +138,7 @@ module cpu (
     logic [4:0] rf_waddr_ex_mem;
     logic [4:0] inst_op_ex_mem;
     logic [2:0] inst_type_ex_mem;
+    logic csr_we_ex_mem;
 
     EX EX(
         .clk_i(clk_i),
@@ -136,6 +158,7 @@ module cpu (
         .rf_waddr_ex_mem_i(rf_waddr_ex_mem),
         .alu_y_ex_mem_i(alu_y_ex_mem),
         .rf_we_mem_i(rf_we_mem),
+        .csr_we_ex_mem_i(csr_we_ex_mem),
 
         .rf_waddr_i(rf_waddr_o),
         .rf_wdata_i(rf_wdata_o),
@@ -146,6 +169,34 @@ module cpu (
         .csr_waddr_o(csr_waddr_o),
         .csr_wdata_o(csr_wdata_o),
         .csr_we_o(csr_we_o),
+
+        .mstatus_i(mstatus_i),
+        .mstatus_o(mstatus_o),
+        .mstatus_we(mstatus_we),
+
+        .mie_i(mie_i),
+        .mie_o(mie_o),
+        .mie_we(mie_we),
+
+        .mtvec_i(mtvec_i),
+        .mtvec_o(mtvec_o),
+        .mtvec_we(mtvec_we),
+
+        .mscratch_i(mscratch_i),
+        .mscratch_o(mscratch_o),
+        .mscratch_we(mscratch_we),
+
+        .mepc_i(mepc_i),
+        .mepc_o(mepc_o),
+        .mepc_we(mepc_we),
+
+        .mcause_i(mcause_i),
+        .mcause_o(mcause_o),
+        .mcause_we(mcause_we),
+
+        .mip_i(mip_i),
+        .mip_o(mip_o),
+        .mip_we(mip_we),
 
         .jump_o(jump),
         .jump_addr_o(jump_addr),
@@ -173,7 +224,8 @@ module cpu (
         .rf_rdata_b_o(rf_rdata_b_ex_mem),
         .rf_waddr_o(rf_waddr_ex_mem),
         .inst_op_o(inst_op_ex_mem),
-        .inst_type_o(inst_type_ex_mem)
+        .inst_type_o(inst_type_ex_mem),
+        .csr_we_o(csr_we_ex_mem)
     );
 
     MEM MEM(

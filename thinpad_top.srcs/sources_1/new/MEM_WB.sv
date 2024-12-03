@@ -81,6 +81,14 @@ module MEM_WB(
                                 rf_wdata_o <= alu_y_i;
                                 rf_we_o <= 1;
                             end
+                            CSRRS: begin
+                                rf_wdata_o <= alu_y_i;
+                                rf_we_o <= 1;
+                            end
+                            CSRRC: begin
+                                rf_wdata_o <= alu_y_i;
+                                rf_we_o <= 1;
+                            end
                             default: begin
                                 rf_wdata_o <= alu_y_i;
                                 rf_we_o <= 0;
