@@ -8,7 +8,6 @@ module mmu #(
     parameter TLB_TAG_WIDTH = 22,
     parameter TLB_INDEX_WIDTH = 8,
     parameter TLB_OFFSET_WIDTH = 2,
-    parameter TLB_SET_SIZE = 1,
     parameter PAGE_SIZE = 2 ** OFFSET_WIDTH,
     parameter PTE_SIZE = 4
 )(
@@ -63,13 +62,12 @@ module mmu #(
     assign ppn[1] = satp_ppn;
     assign ppn[0] = pte_ppn;
 
-    logic [TLB_SET_SIZE - 1:0] tlb_valid [(1 << TLB_INDEX_WIDTH) - 1:0];
-    logic [$clog2(TLB_SET_SIZE) - 1:0] tlb_lru [(1 << TLB_INDEX_WIDTH) - 1:0];
+    logic tlb_valid [(1 << TLB_INDEX_WIDTH) - 1:0];
 
-    logic [TLB_TAG_WIDTH - 1:0] tlb_tag [(1 << TLB_INDEX_WIDTH) - 1:0][TLB_SET_SIZE - 1:0];
-    logic [DATA_WIDTH - 1:0] tlb_data [(1 << TLB_INDEX_WIDTH) - 1:0][TLB_SET_SIZE - 1:0];
+    logic [TLB_TAG_WIDTH - 1:0] tlb_tag [(1 << TLB_INDEX_WIDTH) - 1:0];
+    logic [DATA_WIDTH - 1:0] tlb_data [(1 << TLB_INDEX_WIDTH) - 1:0];
 
-    logic [TLB_SET_SIZE - 1:0] tlb_hit;
+    logic tlb_hit;
     logic [DATA_WIDTH - 1:0] tlb_pte;
     wire [PPN_WIDTH - 1:0] tlb_ppn = tlb_pte[DATA_WIDTH - 3:DATA_WIDTH - PPN_WIDTH - 2];
 
@@ -82,13 +80,10 @@ module mmu #(
     state_t state;
 
     always_comb begin
-        tlb_hit = 4'b0;
-        wb_dat_o = mem_dat_i;
-        for (int i = 0; i < TLB_SET_SIZE; i = i + 1) begin
-            tlb_hit[i] = (tlb_tag[addr_tlb_index][i] == addr_tlb_tag) && tlb_valid[addr_tlb_index][i];
-            if (tlb_hit[i]) begin
-                tlb_pte = tlb_data[addr_tlb_index][i];
-            end
+        wb_dat_o <= mem_dat_i;
+        tlb_hit = (tlb_tag[addr_tlb_index] == addr_tlb_tag) && tlb_valid[addr_tlb_index];
+        if (tlb_hit) begin
+            tlb_pte = tlb_data[addr_tlb_index];
         end
 
         case (state)
@@ -103,7 +98,7 @@ module mmu #(
                         mem_dat_o = wb_dat_i;
                         mem_sel_o = wb_sel_i;
                         mem_we_o = wb_we_i;
-                    end else if (tlb_hit != 4'b0) begin // TLB hit TODO: Check page fault
+                    end else if (tlb_hit) begin // TLB hit TODO: Check page fault
                         wb_ack_o = mem_ack_i;
 
                         mem_cyc_o = wb_cyc_i;
@@ -173,11 +168,8 @@ module mmu #(
             satp_reg <= 0;
             for (int i = 0; i < 1 << TLB_INDEX_WIDTH; i = i + 1) begin
                 tlb_valid[i] <= 0;
-                tlb_lru[i] <= 0;
-                for (int j = 0; j < TLB_SET_SIZE; j = j + 1) begin
-                    tlb_tag[i][j] <= 0;
-                    tlb_data[i][j] <= 0;
-                end
+                tlb_tag[i] <= 0;
+                tlb_data[i] <= 0;
             end
             state <= IDLE;
         end else begin
@@ -186,7 +178,7 @@ module mmu #(
                     if (wb_cyc_i && wb_stb_i) begin
                         if (!satp_mode || wb_adr_i > 32'h8020_0000) begin
                             state <= TRANSLATE;
-                        end else if (tlb_hit != 4'b0) begin
+                        end else if (tlb_hit) begin
                             if (wb_we_i && !tlb_pte[2]) begin
                                 // TODO: page fault
                                 state <= TRANSLATE;
@@ -199,11 +191,8 @@ module mmu #(
                     end else if (sfence_vma_i) begin
                         for (int i = 0; i < 1 << TLB_INDEX_WIDTH; i = i + 1) begin
                             tlb_valid[i] <= 0;
-                            tlb_lru[i] <= 0;
-                            for (int j = 0; j < TLB_SET_SIZE; j = j + 1) begin
-                                tlb_tag[i][j] <= 0;
-                                tlb_data[i][j] <= 0;
-                            end
+                            tlb_tag[i] <= 0;
+                            tlb_data[i] <= 0;
                         end
                     end else begin
                         satp_reg <= satp_i;
@@ -221,16 +210,14 @@ module mmu #(
                     end else if (pte_data[1] == 1'b1 || pte_data[3] == 1'b1) begin // r == 1 || x == 1
                         if (wb_we_i && !pte_data[2]) begin // we == 1 && w == 0
                             // TODO: page fault
-                            tlb_valid[addr_tlb_index][tlb_lru[addr_tlb_index]] <= 1'b1;
-                            tlb_lru[addr_tlb_index] <= (tlb_lru[addr_tlb_index] + 1) % TLB_SET_SIZE;
-                            tlb_tag[addr_tlb_index][tlb_lru[addr_tlb_index]] <= addr_tlb_tag;
-                            tlb_data[addr_tlb_index][tlb_lru[addr_tlb_index]] <= pte_data;
+                            tlb_valid[addr_tlb_index] <= 1'b1;
+                            tlb_tag[addr_tlb_index] <= addr_tlb_tag;
+                            tlb_data[addr_tlb_index] <= pte_data;
                             state <= TRANSLATE;
                         end else begin
-                            tlb_valid[addr_tlb_index][tlb_lru[addr_tlb_index]] <= 1'b1;
-                            tlb_lru[addr_tlb_index] <= (tlb_lru[addr_tlb_index] + 1) % TLB_SET_SIZE;
-                            tlb_tag[addr_tlb_index][tlb_lru[addr_tlb_index]] <= addr_tlb_tag;
-                            tlb_data[addr_tlb_index][tlb_lru[addr_tlb_index]] <= pte_data;
+                            tlb_valid[addr_tlb_index] <= 1'b1;
+                            tlb_tag[addr_tlb_index] <= addr_tlb_tag;
+                            tlb_data[addr_tlb_index] <= pte_data;
                             state <= TRANSLATE;
                         end
                     end else if (pte_index == 0) begin // r == 0 && x == 0
