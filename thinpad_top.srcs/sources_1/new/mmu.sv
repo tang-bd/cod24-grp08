@@ -222,13 +222,13 @@ module mmu #(
                         if (wb_we_i && !pte_data[2]) begin // we == 1 && w == 0
                             // TODO: page fault
                             tlb_valid[addr_tlb_index][tlb_lru[addr_tlb_index]] <= 1'b1;
-                            tlb_lru[addr_tlb_index] <= tlb_lru[addr_tlb_index] + 1;
+                            tlb_lru[addr_tlb_index] <= (tlb_lru[addr_tlb_index] + 1) % TLB_SET_SIZE;
                             tlb_tag[addr_tlb_index][tlb_lru[addr_tlb_index]] <= addr_tlb_tag;
                             tlb_data[addr_tlb_index][tlb_lru[addr_tlb_index]] <= pte_data;
                             state <= TRANSLATE;
                         end else begin
                             tlb_valid[addr_tlb_index][tlb_lru[addr_tlb_index]] <= 1'b1;
-                            tlb_lru[addr_tlb_index] <= tlb_lru[addr_tlb_index] + 1;
+                            tlb_lru[addr_tlb_index] <= (tlb_lru[addr_tlb_index] + 1) % TLB_SET_SIZE;
                             tlb_tag[addr_tlb_index][tlb_lru[addr_tlb_index]] <= addr_tlb_tag;
                             tlb_data[addr_tlb_index][tlb_lru[addr_tlb_index]] <= pte_data;
                             state <= TRANSLATE;
