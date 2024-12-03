@@ -5,10 +5,7 @@ module mmu #(
     parameter VPN0_WIDTH = 10,
     parameter PPN_WIDTH = 20,
     parameter OFFSET_WIDTH = 12,
-    parameter TLB_TAG_WIDTH = 22,
-    parameter TLB_INDEX_WIDTH = 8,
-    parameter TLB_OFFSET_WIDTH = 2,
-    parameter PAGE_SIZE = 2 ** OFFSET_WIDTH,
+    parameter PAGE_SIZE = 1 << OFFSET_WIDTH,
     parameter PTE_SIZE = 4
 )(
     // clk and reset
@@ -45,10 +42,6 @@ module mmu #(
     assign addr_vpn[0] = wb_adr_i[VPN0_WIDTH + OFFSET_WIDTH - 1:OFFSET_WIDTH];
     wire [OFFSET_WIDTH - 1:0] addr_offset = wb_adr_i[OFFSET_WIDTH - 1:0];
 
-    wire [TLB_TAG_WIDTH - 1:0] addr_tlb_tag = wb_adr_i[TLB_TAG_WIDTH + TLB_OFFSET_WIDTH + TLB_INDEX_WIDTH - 1:TLB_OFFSET_WIDTH + TLB_INDEX_WIDTH];
-    wire [TLB_INDEX_WIDTH - 1:0] addr_tlb_index = wb_adr_i[TLB_INDEX_WIDTH + TLB_OFFSET_WIDTH - 1:TLB_OFFSET_WIDTH];
-    wire [TLB_OFFSET_WIDTH - 1:0] addr_tlb_offset = wb_adr_i[TLB_OFFSET_WIDTH - 1:0];
-
     // satp breakdown
     logic [DATA_WIDTH - 1:0] satp_reg;
     wire satp_mode = satp_reg[ADDR_WIDTH - 1];
@@ -62,15 +55,6 @@ module mmu #(
     assign ppn[1] = satp_ppn;
     assign ppn[0] = pte_ppn;
 
-    logic tlb_valid [(1 << TLB_INDEX_WIDTH) - 1:0];
-
-    logic [TLB_TAG_WIDTH - 1:0] tlb_tag [(1 << TLB_INDEX_WIDTH) - 1:0];
-    logic [DATA_WIDTH - 1:0] tlb_data [(1 << TLB_INDEX_WIDTH) - 1:0];
-
-    logic tlb_hit;
-    logic [DATA_WIDTH - 1:0] tlb_pte;
-    wire [PPN_WIDTH - 1:0] tlb_ppn = tlb_pte[DATA_WIDTH - 3:DATA_WIDTH - PPN_WIDTH - 2];
-
     typedef enum logic [1:0] {
         IDLE = 0,
         READ_PTE = 1,
@@ -81,10 +65,6 @@ module mmu #(
 
     always_comb begin
         wb_dat_o <= mem_dat_i;
-        tlb_hit = (tlb_tag[addr_tlb_index] == addr_tlb_tag) && tlb_valid[addr_tlb_index];
-        if (tlb_hit) begin
-            tlb_pte = tlb_data[addr_tlb_index];
-        end
 
         case (state)
             IDLE: begin
@@ -95,15 +75,6 @@ module mmu #(
                         mem_cyc_o = wb_cyc_i;
                         mem_stb_o = wb_stb_i;
                         mem_adr_o = wb_adr_i;
-                        mem_dat_o = wb_dat_i;
-                        mem_sel_o = wb_sel_i;
-                        mem_we_o = wb_we_i;
-                    end else if (tlb_hit) begin // TLB hit TODO: Check page fault
-                        wb_ack_o = mem_ack_i;
-
-                        mem_cyc_o = wb_cyc_i;
-                        mem_stb_o = wb_stb_i;
-                        mem_adr_o = tlb_ppn * PAGE_SIZE + addr_offset;
                         mem_dat_o = wb_dat_i;
                         mem_sel_o = wb_sel_i;
                         mem_we_o = wb_we_i;
@@ -166,11 +137,6 @@ module mmu #(
             pte_data <= 0;
             pte_index <= 1;
             satp_reg <= 0;
-            for (int i = 0; i < 1 << TLB_INDEX_WIDTH; i = i + 1) begin
-                tlb_valid[i] <= 0;
-                tlb_tag[i] <= 0;
-                tlb_data[i] <= 0;
-            end
             state <= IDLE;
         end else begin
             case (state)
@@ -178,21 +144,8 @@ module mmu #(
                     if (wb_cyc_i && wb_stb_i) begin
                         if (!satp_mode || wb_adr_i > 32'h8020_0000) begin
                             state <= TRANSLATE;
-                        end else if (tlb_hit) begin
-                            if (wb_we_i && !tlb_pte[2]) begin
-                                // TODO: page fault
-                                state <= TRANSLATE;
-                            end else begin
-                                state <= TRANSLATE;
-                            end
                         end else begin
                             state <= READ_PTE;
-                        end
-                    end else if (sfence_vma_i) begin
-                        for (int i = 0; i < 1 << TLB_INDEX_WIDTH; i = i + 1) begin
-                            tlb_valid[i] <= 0;
-                            tlb_tag[i] <= 0;
-                            tlb_data[i] <= 0;
                         end
                     end else begin
                         satp_reg <= satp_i;
@@ -210,14 +163,8 @@ module mmu #(
                     end else if (pte_data[1] == 1'b1 || pte_data[3] == 1'b1) begin // r == 1 || x == 1
                         if (wb_we_i && !pte_data[2]) begin // we == 1 && w == 0
                             // TODO: page fault
-                            tlb_valid[addr_tlb_index] <= 1'b1;
-                            tlb_tag[addr_tlb_index] <= addr_tlb_tag;
-                            tlb_data[addr_tlb_index] <= pte_data;
                             state <= TRANSLATE;
                         end else begin
-                            tlb_valid[addr_tlb_index] <= 1'b1;
-                            tlb_tag[addr_tlb_index] <= addr_tlb_tag;
-                            tlb_data[addr_tlb_index] <= pte_data;
                             state <= TRANSLATE;
                         end
                     end else if (pte_index == 0) begin // r == 0 && x == 0
