@@ -46,7 +46,7 @@ module tb;
   wire uart_tsre;  // 数据发送完毕标志
 
   // Windows 需要注意路径分隔符的转义，例如 "D:\\foo\\bar.bin"
-  parameter BASE_RAM_INIT_FILE = "D:\\kernel_test.bin"; // BaseRAM 初始化文件，请修改为实际的绝对路径
+  parameter BASE_RAM_INIT_FILE = "D:\\kernel.bin"; // BaseRAM 初始化文件，请修改为实际的绝对路径
   parameter EXT_RAM_INIT_FILE = "";  // ExtRAM 初始化文件，请修改为实际的绝对路径
   parameter FLASH_INIT_FILE = "";  // Flash 初始化文件，请修改为实际的绝对路径
 
@@ -204,6 +204,8 @@ module tb;
     uart.pc_send_byte(8'h00);
     #200;
     uart.pc_send_byte(8'h80);
+    #200;
+    uart.pc_send_byte(8'h52);
     #200;
 
   end

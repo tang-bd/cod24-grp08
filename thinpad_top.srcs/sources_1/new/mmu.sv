@@ -14,7 +14,6 @@ module mmu #(
 
     // satp register
     input wire [DATA_WIDTH - 1:0] satp_i,
-    input wire sfence_vma_i,
 
     // wishbone slave interface
     input wire wb_cyc_i,

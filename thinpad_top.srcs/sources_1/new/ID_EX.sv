@@ -82,28 +82,20 @@ module ID_EX(
                 inst_op_o = FENCE_I;
             end
             7'b1110011: begin
-                case (inst_reg[31:25])
-                    7'b0001001: begin
-                        inst_type_o = R_TYPE;
-                        inst_op_o = SFENCE_VMA;
-                    end
-                    default: begin
-                        inst_type_o = I_TYPE;
-                        case (inst_reg[14:12])
-                            3'b000: begin
-                                case (inst_reg[31:20])
-                                    12'h000: inst_op_o = ECALL;
-                                    12'h001: inst_op_o = EBREAK;
-                                    12'h302: inst_op_o = MRET;
-                                    default: inst_op_o = UNKNOWN_INST_OP;
-                                endcase
-                            end
-                            3'b001: inst_op_o = CSRRW;
-                            3'b010: inst_op_o = CSRRS;
-                            3'b011: inst_op_o = CSRRC;
+                inst_type_o = I_TYPE;
+                case (inst_reg[14:12])
+                    3'b000: begin
+                        case (inst_reg[31:20])
+                            12'h000: inst_op_o = ECALL;
+                            12'h001: inst_op_o = EBREAK;
+                            12'h302: inst_op_o = MRET;
                             default: inst_op_o = UNKNOWN_INST_OP;
                         endcase
                     end
+                    3'b001: inst_op_o = CSRRW;
+                    3'b010: inst_op_o = CSRRS;
+                    3'b011: inst_op_o = CSRRC;
+                    default: inst_op_o = UNKNOWN_INST_OP;
                 endcase
             end
             7'b0100011: begin

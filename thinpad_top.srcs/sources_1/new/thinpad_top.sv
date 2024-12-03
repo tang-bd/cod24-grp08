@@ -274,14 +274,11 @@ module thinpad_top (
   logic [3:0] wbp1_sel_i;
   logic wbp1_we_i;
 
-  logic sfence_vma;
-
   mmu immu (
       .clk_i(sys_clk),
       .rst_i(sys_rst),
 
       .satp_i(satp_o),
-      .sfence_vma_i(sfence_vma),
 
       .wb_cyc_i(wbm0_cyc_i),
       .wb_stb_i(wbm0_stb_i),
@@ -307,7 +304,6 @@ module thinpad_top (
       .rst_i(sys_rst),
 
       .satp_i(satp_o),
-      .sfence_vma_i(sfence_vma),
 
       .wb_cyc_i(wbs3_cyc_o),
       .wb_stb_i(wbs3_stb_o),
@@ -668,7 +664,6 @@ module thinpad_top (
     .clk_i(sys_clk),
     .rst_i(sys_rst),
     .fence_i_o(fence_i),
-    .sfence_vma_o(sfence_vma),
     .wbm0_cyc_o(wbm0_cyc_i),
     .wbm0_stb_o(wbm0_stb_i),
     .wbm0_ack_i(wbm0_ack_o),
