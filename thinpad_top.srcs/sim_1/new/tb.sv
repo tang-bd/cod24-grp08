@@ -197,15 +197,13 @@ module tb;
 
     uart.pc_send_byte(8'h47);  // G
     #200;
-    uart.pc_send_byte(8'h00);
+    uart.pc_send_byte(8'h38);
     #200;
-    uart.pc_send_byte(8'h10);
+    uart.pc_send_byte(8'h11);
     #200;
     uart.pc_send_byte(8'h00);
     #200;
     uart.pc_send_byte(8'h80);
-    #200;
-    uart.pc_send_byte(8'h52);
     #200;
 
   end

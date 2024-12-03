@@ -4,6 +4,8 @@ module cpu (
     input wire clk_i,
     input wire rst_i,
 
+    output reg [1:0] privilege_mode_o,
+
     // wishbone
     output reg fence_i_o,
     output reg wbm0_cyc_o,
@@ -60,6 +62,18 @@ module cpu (
     input wire [31:0] mip_i,
     output reg [31:0] mip_o,
     output wire mip_we,
+    input wire [31:0] mtime0_i,
+    output reg [31:0] mtime0_o,
+    output wire mtime0_we,
+    input wire [31:0] mtime1_i,
+    output reg [31:0] mtime1_o,
+    output wire mtime1_we,
+    input wire [31:0] mtimecmp0_i,
+    output reg [31:0] mtimecmp0_o,
+    output wire mtimecmp0_we,
+    input wire [31:0] mtimecmp1_i,
+    output reg [31:0] mtimecmp1_o,
+    output wire mtimecmp1_we,
 
     // alu
     output reg [31:0] alu_a_o,
@@ -163,6 +177,8 @@ module cpu (
         .rf_wdata_i(rf_wdata_o),
         .rf_we_i(rf_we_o),
 
+        .privilege_mode_o(privilege_mode_o),
+
         .csr_raddr_o(csr_raddr_o),
         .csr_rdata_i(csr_rdata_i),
         .csr_waddr_o(csr_waddr_o),
@@ -240,6 +256,22 @@ module cpu (
 
         .rf_wdata_o(rf_wdata_mem),
         .rf_we_o(rf_we_mem),
+
+        .mtime0_i(mtime0_i),
+        .mtime0_o(mtime0_o),
+        .mtime0_we(mtime0_we),
+
+        .mtime1_i(mtime1_i),
+        .mtime1_o(mtime1_o),
+        .mtime1_we(mtime1_we),
+
+        .mtimecmp0_i(mtimecmp0_i),
+        .mtimecmp0_o(mtimecmp0_o),
+        .mtimecmp0_we(mtimecmp0_we),
+
+        .mtimecmp1_i(mtimecmp1_i),
+        .mtimecmp1_o(mtimecmp1_o),
+        .mtimecmp1_we(mtimecmp1_we),
 
         .fence_i_o(fence_i_o),
         .wb_cyc_o(wbm1_cyc_o),

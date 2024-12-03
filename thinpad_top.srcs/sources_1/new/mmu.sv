@@ -13,6 +13,7 @@ module mmu #(
     input wire rst_i,
 
     // satp register
+    input wire [1:0] privilege_mode_i,
     input wire [DATA_WIDTH - 1:0] satp_i,
 
     // wishbone slave interface
@@ -41,6 +42,8 @@ module mmu #(
     assign addr_vpn[0] = wb_adr_i[VPN0_WIDTH + OFFSET_WIDTH - 1:OFFSET_WIDTH];
     wire [OFFSET_WIDTH - 1:0] addr_offset = wb_adr_i[OFFSET_WIDTH - 1:0];
 
+    logic [DATA_WIDTH - 1:0] privilege_mode_reg;
+
     // satp breakdown
     logic [DATA_WIDTH - 1:0] satp_reg;
     wire satp_mode = satp_reg[ADDR_WIDTH - 1];
@@ -68,7 +71,7 @@ module mmu #(
         case (state)
             IDLE: begin
                 if (wb_cyc_i && wb_stb_i) begin
-                    if (!satp_mode || wb_adr_i > 32'h8020_0000) begin // No translation needed
+                    if (!satp_mode || privilege_mode_reg == 2'b11) begin // No translation needed
                         wb_ack_o = mem_ack_i;
 
                         mem_cyc_o = wb_cyc_i;
@@ -123,7 +126,7 @@ module mmu #(
 
                 mem_cyc_o = wb_cyc_i;
                 mem_stb_o = wb_stb_i;
-                mem_adr_o = (satp_mode && wb_adr_i < 32'h8020_0000) ? pte_ppn * PAGE_SIZE + addr_offset : wb_adr_i;
+                mem_adr_o = (!satp_mode || privilege_mode_reg == 2'b11) ? wb_adr_i : pte_ppn * PAGE_SIZE + addr_offset;
                 mem_dat_o = wb_dat_i;
                 mem_sel_o = wb_sel_i;
                 mem_we_o = wb_we_i;
@@ -135,18 +138,20 @@ module mmu #(
         if (rst_i) begin
             pte_data <= 0;
             pte_index <= 1;
+            privilege_mode_reg <= 0;
             satp_reg <= 0;
             state <= IDLE;
         end else begin
             case (state)
                 IDLE: begin
                     if (wb_cyc_i && wb_stb_i) begin
-                        if (!satp_mode || wb_adr_i > 32'h8020_0000) begin
+                        if (!satp_mode || privilege_mode_reg == 2'b11) begin
                             state <= TRANSLATE;
                         end else begin
                             state <= READ_PTE;
                         end
                     end else begin
+                        privilege_mode_reg <= privilege_mode_i;
                         satp_reg <= satp_i;
                     end
                 end
@@ -157,15 +162,8 @@ module mmu #(
                     end
                 end
                 CHECK_PTE: begin
-                    if (pte_data[0] == 1'b0 || pte_data[2:1] == 2'b10) begin // v == 0 || (r == 0 && w == 1)
-                        // TODO: page fault
-                    end else if (pte_data[1] == 1'b1 || pte_data[3] == 1'b1) begin // r == 1 || x == 1
-                        if (wb_we_i && !pte_data[2]) begin // we == 1 && w == 0
-                            // TODO: page fault
-                            state <= TRANSLATE;
-                        end else begin
-                            state <= TRANSLATE;
-                        end
+                    if (pte_data[1] == 1'b1 || pte_data[3] == 1'b1) begin // r == 1 || x == 1
+                        state <= TRANSLATE;
                     end else if (pte_index == 0) begin // r == 0 && x == 0
                         // TO-DO: page fault
                     end else begin // v == 1 && r == 0 && w == 0 && x == 0 && pte_index != 0
@@ -176,6 +174,7 @@ module mmu #(
                 TRANSLATE: begin
                     if (mem_ack_i) begin
                         pte_index <= 1;
+                        privilege_mode_reg <= privilege_mode_i;
                         satp_reg <= satp_i;
                         state <= IDLE;
                     end

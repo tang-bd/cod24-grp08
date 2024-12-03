@@ -56,16 +56,16 @@ typedef enum logic [4:0] {
     PCNT = 27,
     CTZ = 28,
     SBSET = 29,
-    SFENCE_VMA = 30,
-    UNKNOWN_INST_OP = 31
+    UNKNOWN_INST_OP = 30
 } inst_op_t;
 
 `define EX_BREAK 3
 `define EX_ECALL_U 8
-`define EX_INST_PAGE_FAULT 12
-`define EX_LOAD_PAGE_FAULT 13
-`define EX_STORE_PAGE_FAULT 15
 
 `define EX_INT_FLAG 32'h80000000
+
+`define CLINT 32'h02000000
+`define CLINT_MTIME (`CLINT + 16'hbff8)
+`define CLINT_MTIMECMP (`CLINT + 16'h4000)
 
 `endif

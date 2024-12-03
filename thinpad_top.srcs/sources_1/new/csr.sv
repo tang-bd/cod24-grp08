@@ -36,7 +36,23 @@ module csr(
     output reg [31:0] mip_o,
     input wire mip_we,
 
-    output reg [31:0] satp_o
+    output reg [31:0] satp_o,
+
+    input wire [31:0] mtime0_i,
+    output reg [31:0] mtime0_o,
+    input wire mtime0_we,
+
+    input wire [31:0] mtime1_i,
+    output reg [31:0] mtime1_o,
+    input wire mtime1_we,
+
+    input wire [31:0] mtimecmp0_i,
+    output reg [31:0] mtimecmp0_o,
+    input wire mtimecmp0_we,
+
+    input wire [31:0] mtimecmp1_i,
+    output reg [31:0] mtimecmp1_o,
+    input wire mtimecmp1_we
 );
 
     always_ff @(posedge clk_i) begin
@@ -105,6 +121,22 @@ module csr(
 
             if (mip_we) begin
                 mip_o <= mip_i;
+            end
+
+            if (mtime0_we) begin
+                mtime0_o <= mtime0_i;
+            end
+
+            if (mtime1_we) begin
+                mtime1_o <= mtime1_i;
+            end
+
+            if (mtimecmp0_we) begin
+                mtimecmp0_o <= mtimecmp0_i;
+            end
+
+            if (mtimecmp1_we) begin
+                mtimecmp1_o <= mtimecmp1_i;
             end
         end
     end
