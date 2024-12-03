@@ -164,8 +164,6 @@ module mmu #(
                 CHECK_PTE: begin
                     if (pte_data[1] == 1'b1 || pte_data[3] == 1'b1) begin // r == 1 || x == 1
                         state <= TRANSLATE;
-                    end else if (pte_index == 0) begin // r == 0 && x == 0
-                        // TO-DO: page fault
                     end else begin // v == 1 && r == 0 && w == 0 && x == 0 && pte_index != 0
                         pte_index <= pte_index - 1;
                         state <= READ_PTE;
