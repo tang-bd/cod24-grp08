@@ -42,7 +42,7 @@ module mmu #(
     assign addr_vpn[0] = wb_adr_i[VPN0_WIDTH + OFFSET_WIDTH - 1:OFFSET_WIDTH];
     wire [OFFSET_WIDTH - 1:0] addr_offset = wb_adr_i[OFFSET_WIDTH - 1:0];
 
-    logic [DATA_WIDTH - 1:0] privilege_mode_reg;
+    logic [1:0] privilege_mode_reg;
 
     // satp breakdown
     logic [DATA_WIDTH - 1:0] satp_reg;
@@ -145,7 +145,7 @@ module mmu #(
             case (state)
                 IDLE: begin
                     if (wb_cyc_i && wb_stb_i) begin
-                        if (!satp_mode || privilege_mode_i == 2'b11) begin
+                        if (!satp_mode || privilege_mode_reg == 2'b11) begin
                             state <= TRANSLATE;
                         end else begin
                             state <= READ_PTE;

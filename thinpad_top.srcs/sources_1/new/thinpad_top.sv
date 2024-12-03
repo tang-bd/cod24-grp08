@@ -194,6 +194,9 @@ module thinpad_top (
   logic [11:0] csr_waddr;
   logic csr_we;
 
+  logic [1:0] privilege_mode_i, privilege_mode_o;
+  logic privilege_mode_we;
+
   logic [31:0] mstatus_i, mstatus_o;
   logic mstatus_we;
   logic [31:0] mie_i, mie_o;
@@ -280,9 +283,6 @@ module thinpad_top (
   /* =========== CSR end =========== */
 
   /* =========== MMU begin =========== */
-
-  logic [1:0] privilege_mode_i, privilege_mode_o;
-  logic privilege_mode_we;
 
   logic wbm0_cyc_i, wbm0_stb_i, wbm0_ack_o;
   logic [31:0] wbm0_adr_i, wbm0_dat_i, wbm0_dat_o;

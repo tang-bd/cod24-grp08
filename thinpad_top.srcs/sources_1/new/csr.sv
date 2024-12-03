@@ -8,8 +8,8 @@ module csr(
     input reg [31:0] csr_wdata,
     input wire csr_we,
 
-    input wire [2:0] privilege_mode_i,
-    output reg [2:0] privilege_mode_o,
+    input wire [1:0] privilege_mode_i,
+    output reg [1:0] privilege_mode_o,
     input wire privilege_mode_we,
 
     input wire [31:0] mstatus_i,
@@ -61,6 +61,7 @@ module csr(
 
     always_ff @(posedge clk_i) begin
         if (rst_i) begin
+            privilege_mode_o <= 2'b11;
             mstatus_o <= 32'h0000_0000;
             mie_o <= 32'h0000_0000;
             mtvec_o <= 32'h0000_0000;
