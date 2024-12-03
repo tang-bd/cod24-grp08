@@ -144,6 +144,7 @@ module mmu #(
         end else begin
             case (state)
                 IDLE: begin
+                    satp_reg <= satp_i;
                     if (wb_cyc_i && wb_stb_i) begin
                         if (!satp_mode || privilege_mode_reg == 2'b11) begin
                             state <= TRANSLATE;
