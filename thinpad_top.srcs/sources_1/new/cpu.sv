@@ -4,9 +4,11 @@ module cpu (
     input wire clk_i,
     input wire rst_i,
 
+    output reg [1:0] privilege_mode_o,
+    output reg privilege_mode_we,
+
     // wishbone
     output reg fence_i_o,
-    output reg sfence_vma_o,
     output reg wbm0_cyc_o,
     output reg wbm0_stb_o,
     input wire wbm0_ack_i,
@@ -40,6 +42,39 @@ module cpu (
     output reg [11:0] csr_waddr_o,
     output reg [31:0] csr_wdata_o,
     output reg csr_we_o,
+    input wire [31:0] mstatus_i,
+    output reg [31:0] mstatus_o,
+    output wire mstatus_we,
+    input wire [31:0] mie_i,
+    output reg [31:0] mie_o,
+    output wire mie_we,
+    input wire [31:0] mtvec_i,
+    output reg [31:0] mtvec_o,
+    output wire mtvec_we,
+    input wire [31:0] mscratch_i,
+    output reg [31:0] mscratch_o,
+    output wire mscratch_we,
+    input wire [31:0] mepc_i,
+    output reg [31:0] mepc_o,
+    output wire mepc_we,
+    input wire [31:0] mcause_i,
+    output reg [31:0] mcause_o,
+    output wire mcause_we,
+    input wire [31:0] mip_i,
+    output reg [31:0] mip_o,
+    output wire mip_we,
+    input wire [31:0] mtime0_i,
+    output reg [31:0] mtime0_o,
+    output wire mtime0_we,
+    input wire [31:0] mtime1_i,
+    output reg [31:0] mtime1_o,
+    output wire mtime1_we,
+    input wire [31:0] mtimecmp0_i,
+    output reg [31:0] mtimecmp0_o,
+    output wire mtimecmp0_we,
+    input wire [31:0] mtimecmp1_i,
+    output reg [31:0] mtimecmp1_o,
+    output wire mtimecmp1_we,
 
     // alu
     output reg [31:0] alu_a_o,
@@ -117,6 +152,7 @@ module cpu (
     logic [4:0] rf_waddr_ex_mem;
     logic [4:0] inst_op_ex_mem;
     logic [2:0] inst_type_ex_mem;
+    logic csr_we_ex_mem;
 
     EX EX(
         .clk_i(clk_i),
@@ -136,16 +172,48 @@ module cpu (
         .rf_waddr_ex_mem_i(rf_waddr_ex_mem),
         .alu_y_ex_mem_i(alu_y_ex_mem),
         .rf_we_mem_i(rf_we_mem),
+        .csr_we_ex_mem_i(csr_we_ex_mem),
 
         .rf_waddr_i(rf_waddr_o),
         .rf_wdata_i(rf_wdata_o),
         .rf_we_i(rf_we_o),
+
+        .privilege_mode_o(privilege_mode_o),
+        .privilege_mode_we(privilege_mode_we),
 
         .csr_raddr_o(csr_raddr_o),
         .csr_rdata_i(csr_rdata_i),
         .csr_waddr_o(csr_waddr_o),
         .csr_wdata_o(csr_wdata_o),
         .csr_we_o(csr_we_o),
+
+        .mstatus_i(mstatus_i),
+        .mstatus_o(mstatus_o),
+        .mstatus_we(mstatus_we),
+
+        .mie_i(mie_i),
+        .mie_o(mie_o),
+        .mie_we(mie_we),
+
+        .mtvec_i(mtvec_i),
+        .mtvec_o(mtvec_o),
+        .mtvec_we(mtvec_we),
+
+        .mscratch_i(mscratch_i),
+        .mscratch_o(mscratch_o),
+        .mscratch_we(mscratch_we),
+
+        .mepc_i(mepc_i),
+        .mepc_o(mepc_o),
+        .mepc_we(mepc_we),
+
+        .mcause_i(mcause_i),
+        .mcause_o(mcause_o),
+        .mcause_we(mcause_we),
+
+        .mip_i(mip_i),
+        .mip_o(mip_o),
+        .mip_we(mip_we),
 
         .jump_o(jump),
         .jump_addr_o(jump_addr),
@@ -173,7 +241,8 @@ module cpu (
         .rf_rdata_b_o(rf_rdata_b_ex_mem),
         .rf_waddr_o(rf_waddr_ex_mem),
         .inst_op_o(inst_op_ex_mem),
-        .inst_type_o(inst_type_ex_mem)
+        .inst_type_o(inst_type_ex_mem),
+        .csr_we_o(csr_we_ex_mem)
     );
 
     MEM MEM(
@@ -190,8 +259,23 @@ module cpu (
         .rf_wdata_o(rf_wdata_mem),
         .rf_we_o(rf_we_mem),
 
+        .mtime0_i(mtime0_i),
+        .mtime0_o(mtime0_o),
+        .mtime0_we(mtime0_we),
+
+        .mtime1_i(mtime1_i),
+        .mtime1_o(mtime1_o),
+        .mtime1_we(mtime1_we),
+
+        .mtimecmp0_i(mtimecmp0_i),
+        .mtimecmp0_o(mtimecmp0_o),
+        .mtimecmp0_we(mtimecmp0_we),
+
+        .mtimecmp1_i(mtimecmp1_i),
+        .mtimecmp1_o(mtimecmp1_o),
+        .mtimecmp1_we(mtimecmp1_we),
+
         .fence_i_o(fence_i_o),
-        .sfence_vma_o(sfence_vma_o),
         .wb_cyc_o(wbm1_cyc_o),
         .wb_stb_o(wbm1_stb_o),
         .wb_ack_i(wbm1_ack_i),

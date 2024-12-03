@@ -16,8 +16,21 @@ module EX_MEM(
     output reg [31:0] rf_rdata_b_o,
     output reg [4:0] rf_waddr_o,
     output reg [4:0] inst_op_o,
-    output reg [2:0] inst_type_o
+    output reg [2:0] inst_type_o,
+    output reg csr_we_o
 );
+    always_comb begin
+        case (inst_op_o)
+            CSRRW: csr_we_o = 1;
+            CSRRS: csr_we_o = 1;
+            CSRRC: csr_we_o = 1;
+            ECALL: csr_we_o = 1;
+            EBREAK: csr_we_o = 1;
+            MRET: csr_we_o = 1;
+            default: csr_we_o = 0;
+        endcase
+    end
+
     always_ff @(posedge clk_i) begin
         if (rst_i) begin
             pc_o <= 32'h0;

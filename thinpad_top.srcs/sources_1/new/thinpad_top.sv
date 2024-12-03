@@ -83,18 +83,18 @@ module thinpad_top (
   /* =========== Demo code begin =========== */
 
   // PLL 分频示例
-  logic locked, clk_10M, clk_20M;
-  pll_example clock_gen (
-      // Clock in ports
-      .clk_in1(clk_50M),  // 外部时钟输入
-      // Clock out ports
-      .clk_out1(clk_10M),  // 时钟输出 1，频率在 IP 配置界面中设置
-      .clk_out2(clk_20M),  // 时钟输出 2，频率在 IP 配置界面中设置
-      // Status and control signals
-      .reset(reset_btn),  // PLL 复位输入
-      .locked(locked)  // PLL 锁定指示输出，"1"表示时钟稳定，
-                       // 后级电路复位信号应当由它生成（见下）
-  );
+  // logic locked, clk_10M, clk_20M;
+  // pll_example clock_gen (
+  //     // Clock in ports
+  //     .clk_in1(clk_50M),  // 外部时钟输入
+  //     // Clock out ports
+  //     .clk_out1(clk_10M),  // 时钟输出 1，频率在 IP 配置界面中设置
+  //     .clk_out2(clk_20M),  // 时钟输出 2，频率在 IP 配置界面中设置
+  //     // Status and control signals
+  //     .reset(reset_btn),  // PLL 复位输入
+  //     .locked(locked)  // PLL 锁定指示输出，"1"表示时钟稳定，
+  //                      // 后级电路复位信号应当由它生成（见下）
+  // );
 
   /* =========== Demo code end =========== */
 
@@ -102,11 +102,12 @@ module thinpad_top (
   logic sys_rst;
 
   assign sys_clk = clk_50M;
+  assign sys_rst = reset_btn;
   // 异步复位，同步释放，将 locked 信号转为后级电路的复位 reset_of_clk10M
-  always_ff @(posedge sys_clk or negedge locked) begin
-    if (~locked) sys_rst <= 1'b1;
-    else sys_rst <= 1'b0;
-  end
+  // always_ff @(posedge sys_clk or negedge locked) begin
+  //   if (~locked) sys_rst <= 1'b1;
+  //   else sys_rst <= 1'b0;
+  // end
 
   // 本实验不使用 CPLD 串口，禁用防止总线冲突
   assign uart_rdn = 1'b1;
@@ -193,7 +194,31 @@ module thinpad_top (
   logic [11:0] csr_waddr;
   logic csr_we;
 
-  logic [31:0] satp;
+  logic [1:0] privilege_mode_i, privilege_mode_o;
+  logic privilege_mode_we;
+
+  logic [31:0] mstatus_i, mstatus_o;
+  logic mstatus_we;
+  logic [31:0] mie_i, mie_o;
+  logic mie_we;
+  logic [31:0] mtvec_i, mtvec_o;
+  logic mtvec_we;
+  logic [31:0] mscratch_i, mscratch_o;
+  logic mscratch_we;
+  logic [31:0] mepc_i, mepc_o;
+  logic mepc_we;
+  logic [31:0] mcause_i, mcause_o;
+  logic mcause_we;
+  logic [31:0] mip_i, mip_o;
+  logic mip_we;
+
+  logic [31:0] satp_o;
+
+  logic [31:0] mtime0_i, mtime0_o, mtime1_i, mtime1_o;
+  logic mtime0_we, mtime1_we;
+
+  logic [31:0] mtimecmp0_i, mtimecmp0_o, mtimecmp1_i, mtimecmp1_o;
+  logic mtimecmp0_we, mtimecmp1_we;
 
   csr csr(
     .clk_i(sys_clk),
@@ -203,7 +228,56 @@ module thinpad_top (
     .csr_wdata(csr_wdata),
     .csr_waddr(csr_waddr),
     .csr_we(csr_we),
-    .satp_o(satp)
+
+    .privilege_mode_i(privilege_mode_i),
+    .privilege_mode_o(privilege_mode_o),
+    .privilege_mode_we(privilege_mode_we),
+
+    .mstatus_i(mstatus_i),
+    .mstatus_o(mstatus_o),
+    .mstatus_we(mstatus_we),
+
+    .mie_i(mie_i),
+    .mie_o(mie_o),
+    .mie_we(mie_we),
+
+    .mtvec_i(mtvec_i),
+    .mtvec_o(mtvec_o),
+    .mtvec_we(mtvec_we),
+
+    .mscratch_i(mscratch_i),
+    .mscratch_o(mscratch_o),
+    .mscratch_we(mscratch_we),
+
+    .mepc_i(mepc_i),
+    .mepc_o(mepc_o),
+    .mepc_we(mepc_we),
+
+    .mcause_i(mcause_i),
+    .mcause_o(mcause_o),
+    .mcause_we(mcause_we),
+
+    .mip_i(mip_i),
+    .mip_o(mip_o),
+    .mip_we(mip_we),
+
+    .satp_o(satp_o),
+
+    .mtime0_i(mtime0_i),
+    .mtime0_o(mtime0_o),
+    .mtime0_we(mtime0_we),
+
+    .mtime1_i(mtime1_i),
+    .mtime1_o(mtime1_o),
+    .mtime1_we(mtime1_we),
+
+    .mtimecmp0_i(mtimecmp0_i),
+    .mtimecmp0_o(mtimecmp0_o),
+    .mtimecmp0_we(mtimecmp0_we),
+
+    .mtimecmp1_i(mtimecmp1_i),
+    .mtimecmp1_o(mtimecmp1_o),
+    .mtimecmp1_we(mtimecmp1_we)
   );
 
   /* =========== CSR end =========== */
@@ -230,14 +304,12 @@ module thinpad_top (
   logic [3:0] wbp1_sel_i;
   logic wbp1_we_i;
 
-  logic sfence_vma;
-
   mmu immu (
       .clk_i(sys_clk),
       .rst_i(sys_rst),
 
-      .satp_i(satp),
-      .sfence_vma_i(sfence_vma),
+      .privilege_mode_i(privilege_mode_o),
+      .satp_i(satp_o),
 
       .wb_cyc_i(wbm0_cyc_i),
       .wb_stb_i(wbm0_stb_i),
@@ -262,8 +334,8 @@ module thinpad_top (
       .clk_i(sys_clk),
       .rst_i(sys_rst),
 
-      .satp_i(satp),
-      .sfence_vma_i(sfence_vma),
+      .privilege_mode_i(privilege_mode_o),
+      .satp_i(satp_o),
 
       .wb_cyc_i(wbs3_cyc_o),
       .wb_stb_i(wbs3_stb_o),
@@ -623,8 +695,9 @@ module thinpad_top (
   cpu cpu(
     .clk_i(sys_clk),
     .rst_i(sys_rst),
+    .privilege_mode_o(privilege_mode_i),
+    .privilege_mode_we(privilege_mode_we),
     .fence_i_o(fence_i),
-    .sfence_vma_o(sfence_vma),
     .wbm0_cyc_o(wbm0_cyc_i),
     .wbm0_stb_o(wbm0_stb_i),
     .wbm0_ack_i(wbm0_ack_o),
@@ -653,6 +726,39 @@ module thinpad_top (
     .csr_waddr_o(csr_waddr),
     .csr_wdata_o(csr_wdata),
     .csr_we_o(csr_we),
+    .mstatus_i(mstatus_o),
+    .mstatus_o(mstatus_i),
+    .mstatus_we(mstatus_we),
+    .mie_i(mie_o),
+    .mie_o(mie_i),
+    .mie_we(mie_we),
+    .mtvec_i(mtvec_o),
+    .mtvec_o(mtvec_i),
+    .mtvec_we(mtvec_we),
+    .mscratch_i(mscratch_o),
+    .mscratch_o(mscratch_i),
+    .mscratch_we(mscratch_we),
+    .mepc_i(mepc_o),
+    .mepc_o(mepc_i),
+    .mepc_we(mepc_we),
+    .mcause_i(mcause_o),
+    .mcause_o(mcause_i),
+    .mcause_we(mcause_we),
+    .mip_i(mip_o),
+    .mip_o(mip_i),
+    .mip_we(mip_we),
+    .mtime0_i(mtime0_o),
+    .mtime0_o(mtime0_i),
+    .mtime0_we(mtime0_we),
+    .mtime1_i(mtime1_o),
+    .mtime1_o(mtime1_i),
+    .mtime1_we(mtime1_we),
+    .mtimecmp0_i(mtimecmp0_o),
+    .mtimecmp0_o(mtimecmp0_i),
+    .mtimecmp0_we(mtimecmp0_we),
+    .mtimecmp1_i(mtimecmp1_o),
+    .mtimecmp1_o(mtimecmp1_i),
+    .mtimecmp1_we(mtimecmp1_we),
     .alu_a_o(alu_a),
     .alu_b_o(alu_b),
     .alu_op_o(alu_op),

@@ -23,12 +23,44 @@ module EX(
     input wire [4:0] rf_waddr_i,
     input wire [31:0] rf_wdata_i,
     input wire rf_we_i,
+    input wire csr_we_ex_mem_i,
+
+    output reg [1:0] privilege_mode_o,
+    output reg privilege_mode_we,
 
     output reg [11:0] csr_raddr_o,
     input wire [31:0] csr_rdata_i,
     output reg [11:0] csr_waddr_o,
     output reg [31:0] csr_wdata_o,
     output reg csr_we_o,
+
+    input wire [31:0] mstatus_i,
+    output reg [31:0] mstatus_o,
+    output reg mstatus_we,
+
+    input wire [31:0] mie_i,
+    output reg [31:0] mie_o,
+    output reg mie_we,
+
+    input wire [31:0] mtvec_i,
+    output reg [31:0] mtvec_o,
+    output reg mtvec_we,
+
+    input wire [31:0] mscratch_i,
+    output reg [31:0] mscratch_o,
+    output reg mscratch_we,
+
+    input wire [31:0] mepc_i,
+    output reg [31:0] mepc_o,
+    output reg mepc_we,
+
+    input wire [31:0] mcause_i,
+    output reg [31:0] mcause_o,
+    output reg mcause_we,
+
+    input wire [31:0] mip_i,
+    output reg [31:0] mip_o,
+    output reg mip_we,
 
     output reg jump_o,
     output reg [31:0] jump_addr_o,
@@ -42,20 +74,41 @@ module EX(
 
     always_comb begin
         // We prioritize EX_MEM forwarding over MEM_WB forwarding
-        if (rf_we_mem_i && rf_waddr_ex_mem_i != 0 && rf_waddr_ex_mem_i == rf_raddr_a_i) begin
+        if ((rf_we_mem_i || csr_we_ex_mem_i) && rf_waddr_ex_mem_i != 0 && rf_waddr_ex_mem_i == rf_raddr_a_i) begin
             rf_rdata_a = alu_y_ex_mem_i; // EX_MEM forwarding
         end else if (rf_we_i && rf_waddr_i != 0 && rf_waddr_i == rf_raddr_a_i) begin
             rf_rdata_a = rf_wdata_i; // MEM_WB forwarding
         end else begin
             rf_rdata_a = rf_rdata_a_i; // No forwarding
         end
-        if (rf_we_mem_i && rf_waddr_ex_mem_i != 0 && rf_waddr_ex_mem_i == rf_raddr_b_i) begin
+        if ((rf_we_mem_i || csr_we_ex_mem_i) && rf_waddr_ex_mem_i != 0 && rf_waddr_ex_mem_i == rf_raddr_b_i) begin
             rf_rdata_b_o = alu_y_ex_mem_i; // EX_MEM forwarding
         end else if (rf_we_i && rf_waddr_i != 0 && rf_waddr_i == rf_raddr_b_i) begin
             rf_rdata_b_o = rf_wdata_i; // MEM_WB forwarding
         end else begin
             rf_rdata_b_o = rf_rdata_b_i;
         end
+
+        csr_raddr_o = 0;
+        csr_waddr_o = 0;
+        csr_wdata_o = 0;
+
+        privilege_mode_o = 0;
+        privilege_mode_we = 0;
+        mstatus_o = 0;
+        mstatus_we = 0;
+        mie_o = 0;
+        mie_we = 0;
+        mtvec_o = 0;
+        mtvec_we = 0;
+        mscratch_o = 0;
+        mscratch_we = 0;
+        mepc_o = 0;
+        mepc_we = 0;
+        mcause_o = 0;
+        mcause_we = 0;
+        mip_o = 0;
+        mip_we = 0;
 
         case (inst_type_i)
             R_TYPE: begin
@@ -72,11 +125,6 @@ module EX(
                 endcase
                 alu_a_o = rf_rdata_a;
                 alu_b_o = rf_rdata_b_o;
-
-                csr_raddr_o = 0;
-                csr_waddr_o = 0;
-                csr_wdata_o = 0;
-                csr_we_o = 0;
             end
             I_TYPE: begin
                 case (inst_op_i)
@@ -86,11 +134,6 @@ module EX(
                         alu_op_o = ALU_ADD;
                         alu_a_o = rf_rdata_a;
                         alu_b_o = imm_gen_data_i;
-
-                        csr_raddr_o = 0;
-                        csr_waddr_o = 0;
-                        csr_wdata_o = 0;
-                        csr_we_o = 0;
                     end
                     ANDI: begin
                         jump_o = 0;
@@ -98,11 +141,6 @@ module EX(
                         alu_op_o = ALU_AND;
                         alu_a_o = rf_rdata_a;
                         alu_b_o = imm_gen_data_i;
-
-                        csr_raddr_o = 0;
-                        csr_waddr_o = 0;
-                        csr_wdata_o = 0;
-                        csr_we_o = 0;
                     end
                     ORI: begin
                         jump_o = 0;
@@ -110,11 +148,6 @@ module EX(
                         alu_op_o = ALU_OR;
                         alu_a_o = rf_rdata_a;
                         alu_b_o = imm_gen_data_i;
-
-                        csr_raddr_o = 0;
-                        csr_waddr_o = 0;
-                        csr_wdata_o = 0;
-                        csr_we_o = 0;
                     end
                     SLLI: begin
                         jump_o = 0;
@@ -122,11 +155,6 @@ module EX(
                         alu_op_o = ALU_SLL;
                         alu_a_o = rf_rdata_a;
                         alu_b_o = imm_gen_data_i;
-
-                        csr_raddr_o = 0;
-                        csr_waddr_o = 0;
-                        csr_wdata_o = 0;
-                        csr_we_o = 0;
                     end
                     SRLI: begin
                         jump_o = 0;
@@ -134,11 +162,6 @@ module EX(
                         alu_op_o = ALU_SRL;
                         alu_a_o = rf_rdata_a;
                         alu_b_o = imm_gen_data_i;
-
-                        csr_raddr_o = 0;
-                        csr_waddr_o = 0;
-                        csr_wdata_o = 0;
-                        csr_we_o = 0;
                     end
                     LB: begin
                         jump_o = 0;
@@ -146,11 +169,6 @@ module EX(
                         alu_op_o = ALU_ADD;
                         alu_a_o = rf_rdata_a;
                         alu_b_o = imm_gen_data_i;
-
-                        csr_raddr_o = 0;
-                        csr_waddr_o = 0;
-                        csr_wdata_o = 0;
-                        csr_we_o = 0;
                     end
                     LW: begin
                         jump_o = 0;
@@ -158,11 +176,6 @@ module EX(
                         alu_op_o = ALU_ADD;
                         alu_a_o = rf_rdata_a;
                         alu_b_o = imm_gen_data_i;
-
-                        csr_raddr_o = 0;
-                        csr_waddr_o = 0;
-                        csr_wdata_o = 0;
-                        csr_we_o = 0;
                     end
                     JALR: begin
                         jump_o = 1;
@@ -170,11 +183,6 @@ module EX(
                         alu_op_o = ALU_ADD;
                         alu_a_o = pc_i;
                         alu_b_o = imm_gen_data_i;
-
-                        csr_raddr_o = 0;
-                        csr_waddr_o = 0;
-                        csr_wdata_o = 0;
-                        csr_we_o = 0;
                     end
                     PCNT: begin
                         jump_o = 0;
@@ -182,11 +190,6 @@ module EX(
                         alu_op_o = ALU_PCNT;
                         alu_a_o = rf_rdata_a;
                         alu_b_o = 0;
-
-                        csr_raddr_o = 0;
-                        csr_waddr_o = 0;
-                        csr_wdata_o = 0;
-                        csr_we_o = 0;
                     end
                     CTZ: begin
                         jump_o = 0;
@@ -194,11 +197,6 @@ module EX(
                         alu_op_o = ALU_CTZ;
                         alu_a_o = rf_rdata_a;
                         alu_b_o = 0;
-
-                        csr_raddr_o = 0;
-                        csr_waddr_o = 0;
-                        csr_wdata_o = 0;
-                        csr_we_o = 0;
                     end
                     CSRRW: begin
                         jump_o = 0;
@@ -210,9 +208,8 @@ module EX(
                         csr_raddr_o = imm_gen_data_i;
                         csr_waddr_o = imm_gen_data_i;
                         csr_wdata_o = rf_rdata_a;
-                        csr_we_o = 1;
                     end
-                    CSRRW: begin
+                    CSRRS: begin
                         jump_o = 0;
                         jump_addr_o = pc_i;
                         alu_op_o = ALU_ADD;
@@ -221,8 +218,7 @@ module EX(
 
                         csr_raddr_o = imm_gen_data_i;
                         csr_waddr_o = imm_gen_data_i;
-                        csr_wdata_o = csr_rdata_reg & rf_rdata_a;
-                        csr_we_o = 1;
+                        csr_wdata_o = csr_rdata_reg | rf_rdata_a;
                     end
                     CSRRC: begin
                         jump_o = 0;
@@ -234,7 +230,45 @@ module EX(
                         csr_raddr_o = imm_gen_data_i;
                         csr_waddr_o = imm_gen_data_i;
                         csr_wdata_o = csr_rdata_reg & ~rf_rdata_a;
-                        csr_we_o = 1;
+                    end
+                    ECALL: begin
+                        jump_o = 1;
+                        jump_addr_o = mtvec_i;
+                        alu_op_o = ALU_ADD;
+                        alu_a_o = 0;
+                        alu_b_o = 0;
+
+                        
+                        privilege_mode_o = 2'b11;
+                        privilege_mode_we = 1;
+                        mepc_o = pc_i;
+                        mepc_we = 1;
+                        mcause_o = `EX_ECALL_U;
+                        mcause_we = 1;
+                    end
+                    EBREAK: begin
+                        jump_o = 1;
+                        jump_addr_o = mtvec_i;
+                        alu_op_o = ALU_ADD;
+                        alu_a_o = 0;
+                        alu_b_o = 0;
+
+                        privilege_mode_o = 2'b11;
+                        privilege_mode_we = 1;
+                        mepc_o = pc_i;
+                        mepc_we = 1;
+                        mcause_o = `EX_BREAK;
+                        mcause_we = 1;
+                    end
+                    MRET: begin
+                        jump_o = 1;
+                        jump_addr_o = mepc_i;
+                        alu_op_o = ALU_ADD;
+                        alu_a_o = 0;
+                        alu_b_o = 0;
+
+                        privilege_mode_o = mstatus_i[12:11];
+                        privilege_mode_we = 1;
                     end
                     default: begin
                         jump_o = 0;
@@ -242,11 +276,6 @@ module EX(
                         alu_op_o = ALU_ADD;
                         alu_a_o = 0;
                         alu_b_o = 0;
-
-                        csr_raddr_o = 0;
-                        csr_waddr_o = 0;
-                        csr_wdata_o = 0;
-                        csr_we_o = 0;
                     end
                 endcase
             end
@@ -260,11 +289,6 @@ module EX(
                 endcase
                 alu_a_o = rf_rdata_a;
                 alu_b_o = imm_gen_data_i;
-
-                csr_raddr_o = 0;
-                csr_waddr_o = 0;
-                csr_wdata_o = 0;
-                csr_we_o = 0;
             end
             B_TYPE: begin
                 case (inst_op_i)
@@ -276,11 +300,6 @@ module EX(
                 alu_op_o = ALU_ADD;
                 alu_a_o = rf_rdata_a;
                 alu_b_o = rf_rdata_b_o;
-
-                csr_raddr_o = 0;
-                csr_waddr_o = 0;
-                csr_wdata_o = 0;
-                csr_we_o = 0;
             end
             U_TYPE: begin
                 jump_o = 0;
@@ -292,11 +311,6 @@ module EX(
                     default: alu_a_o = 0;
                 endcase
                 alu_b_o = imm_gen_data_i;
-
-                csr_raddr_o = 0;
-                csr_waddr_o = 0;
-                csr_wdata_o = 0;
-                csr_we_o = 0;
             end
             J_TYPE: begin
                 jump_o = 1;
@@ -304,11 +318,6 @@ module EX(
                 alu_op_o = ALU_ADD;
                 alu_a_o = pc_i;
                 alu_b_o = imm_gen_data_i;
-
-                csr_raddr_o = 0;
-                csr_waddr_o = 0;
-                csr_wdata_o = 0;
-                csr_we_o = 0;
             end
             default: begin
                 jump_o = 0;
@@ -316,11 +325,6 @@ module EX(
                 alu_op_o = ALU_ADD;
                 alu_a_o = 0;
                 alu_b_o = 0;
-
-                csr_raddr_o = 0;
-                csr_waddr_o = 0;
-                csr_wdata_o = 0;
-                csr_we_o = 0;
             end
         endcase
     end
@@ -328,17 +332,26 @@ module EX(
     always_ff @(posedge clk_i) begin
         if (rst_i) begin
             csr_rdata_reg <= 0;
+            csr_we_o <= 0;
         end else begin
             if (stall_i) begin
-
-            end else if (bubble_i) begin
-                csr_rdata_reg <= 0;
-            end else begin
                 case (inst_op_i)
-                CSRRW: begin
-                    csr_rdata_reg <= csr_rdata_i;
-                end
+                    CSRRW: begin
+                        csr_rdata_reg <= csr_rdata_i;
+                        csr_we_o <= 1;
+                    end
+                    CSRRS: begin
+                        csr_rdata_reg <= csr_rdata_i;
+                        csr_we_o <= 1;
+                    end
+                    CSRRC: begin
+                        csr_rdata_reg <= csr_rdata_i;
+                        csr_we_o <= 1;
+                    end
                 endcase
+            end else begin
+                csr_rdata_reg <= 0;
+                csr_we_o <= 0;
             end
         end
     end
