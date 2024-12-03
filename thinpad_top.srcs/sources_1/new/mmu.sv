@@ -158,7 +158,7 @@ module mmu #(
 
                 mem_cyc_o = wb_cyc_i;
                 mem_stb_o = wb_stb_i;
-                mem_adr_o = satp_mode ? pte_ppn * PAGE_SIZE + addr_offset : wb_adr_i;
+                mem_adr_o = (satp_mode && wb_adr_i < 32'h8020_0000) ? pte_ppn * PAGE_SIZE + addr_offset : wb_adr_i;
                 mem_dat_o = wb_dat_i;
                 mem_sel_o = wb_sel_i;
                 mem_we_o = wb_we_i;
