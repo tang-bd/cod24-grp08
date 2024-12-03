@@ -4,6 +4,7 @@ module cpu (
     input wire clk_i,
     input wire rst_i,
 
+    input wire [1:0] privilege_mode_i,
     output reg [1:0] privilege_mode_o,
     output reg privilege_mode_we,
 
@@ -178,6 +179,7 @@ module cpu (
         .rf_wdata_i(rf_wdata_o),
         .rf_we_i(rf_we_o),
 
+        .privilege_mode_i(privilege_mode_i),
         .privilege_mode_o(privilege_mode_o),
         .privilege_mode_we(privilege_mode_we),
 

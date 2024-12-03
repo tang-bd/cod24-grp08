@@ -695,6 +695,7 @@ module thinpad_top (
   cpu cpu(
     .clk_i(sys_clk),
     .rst_i(sys_rst),
+    .privilege_mode_i(privilege_mode_o),
     .privilege_mode_o(privilege_mode_i),
     .privilege_mode_we(privilege_mode_we),
     .fence_i_o(fence_i),

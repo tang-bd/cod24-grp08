@@ -25,6 +25,7 @@ module EX(
     input wire rf_we_i,
     input wire csr_we_ex_mem_i,
 
+    input reg [1:0] privilege_mode_i,
     output reg [1:0] privilege_mode_o,
     output reg privilege_mode_we,
 
