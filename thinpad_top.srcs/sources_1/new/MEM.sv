@@ -61,7 +61,7 @@ module MEM(
             data_ready <= 0;
             rf_we_o <= 0;
         end else begin
-            time_reg <= (time_reg + 1) % 100;
+            time_reg <= (time_reg + 1) % 10;
             mtime0_we <= 0;
             mtime1_we <= 0;
             mtimecmp0_we <= 0;
@@ -349,8 +349,8 @@ module MEM(
             end else begin
                 data_ready <= 0;
 
-                if (time_reg == 99) begin
-                    mtime_o <= mtime_i + 1;
+                if (time_reg == 9) begin
+                    mtime_o <= (mtime_i % (1 << 63)) + 1;
                     mtime0_we <= 1;
                     mtime1_we <= 1;
                 end
