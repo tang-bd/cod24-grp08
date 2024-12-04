@@ -114,7 +114,7 @@ module EX(
         mip_o = 0;
         mip_we = 0;
 
-        if (mtime_i > mtimecmp_i && mie_i == (1 << 7) && privilege_mode_i == 2'b00) begin
+        if (mtime_i > mtimecmp_i && mie_i == (1 << 7) && privilege_mode_i == 2'b00 && !stall_i) begin
             jump_o = 1;
             jump_addr_o = mtvec_i;
             alu_op_o = ALU_ADD;

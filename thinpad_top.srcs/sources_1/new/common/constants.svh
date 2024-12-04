@@ -62,7 +62,7 @@ typedef enum logic [4:0] {
 `define EX_BREAK 3
 `define EX_ECALL_U 8
 
-`define EX_INT_FLAG 32'h80000000
+`define EX_INT_FLAG (32'h80000000 || 32'h3 || 32'h4)
 
 `define CLINT 32'h02000000
 `define CLINT_MTIME (`CLINT + 16'hbff8)
