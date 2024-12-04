@@ -121,8 +121,6 @@ module EX(
             alu_a_o = 0;
             alu_b_o = 0;
 
-            privilege_mode_o = 2'b11;
-            privilege_mode_we = 1;
             mepc_o = pc_i;
             mepc_we = 1;
             mcause_o = `EX_INT_FLAG;
