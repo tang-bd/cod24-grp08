@@ -22,7 +22,8 @@ typedef enum logic [3:0] {
     ALU_AND = 4'b0111,
     ALU_PCNT = 4'b1000,
     ALU_CTZ = 4'b1001,
-    ALU_SBSET = 4'b1010
+    ALU_SBSET = 4'b1010,
+    ALU_SHA512SUM0R = 4'b1011
 } alu_op_t;
 
 typedef enum logic [4:0] {
@@ -56,7 +57,8 @@ typedef enum logic [4:0] {
     PCNT = 27,
     CTZ = 28,
     SBSET = 29,
-    UNKNOWN_INST_OP = 30
+    SHA512SUM0R = 30,
+    UNKNOWN_INST_OP = 31
 } inst_op_t;
 
 `define EX_BREAK 3

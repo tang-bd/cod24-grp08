@@ -139,6 +139,7 @@ module EX(
                         OR: alu_op_o = ALU_OR;
                         XOR: alu_op_o = ALU_XOR;
                         SBSET: alu_op_o = ALU_SBSET;
+                        SHA512SUM0R: alu_op_o = ALU_SHA512SUM0R;
                         default: alu_op_o = ALU_ADD;
                     endcase
                     alu_a_o = rf_rdata_a;
