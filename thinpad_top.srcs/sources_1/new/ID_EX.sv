@@ -24,7 +24,13 @@ module ID_EX(
             7'b0110011: begin
                 inst_type_o = R_TYPE;
                 case(inst_reg[14:12])
-                    3'b000: inst_op_o = ADD;
+                    3'b000: begin
+                        case (inst_reg[31:25])
+                            7'b0000000: inst_op_o = ADD;
+                            7'b0101000: inst_op_o = SHA512SUM0R;
+                            default: inst_op_o = UNKNOWN_INST_OP;
+                        endcase
+                    end
                     3'b001: inst_op_o = SBSET;
                     3'b011: inst_op_o = SLTU;
                     3'b111: inst_op_o = AND;
@@ -32,10 +38,6 @@ module ID_EX(
                     3'b100: inst_op_o = XOR;
                     default: inst_op_o = UNKNOWN_INST_OP;
                 endcase
-            end
-            7'b0101000: begin
-                inst_type_o = R_TYPE;
-                inst_op_o = SHA512SUM0R;
             end
             7'b0010011: begin
                 inst_type_o = I_TYPE;
