@@ -33,6 +33,9 @@ module alu(
       ALU_SBSET: begin
         alu_y = alu_a | (1 << (alu_b&31));
       end
+      ALU_SHA512SUM0R: begin
+        alu_y = (alu_a << 25) ^ (alu_a << 30) ^ (alu_a >> 28) ^ (alu_b >> 7) ^ (alu_b >> 2) ^ (alu_b << 4);
+      end
       default: alu_y = 16'h0000;
     endcase
   end

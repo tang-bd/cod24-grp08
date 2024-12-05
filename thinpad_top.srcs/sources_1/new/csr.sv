@@ -42,20 +42,18 @@ module csr(
 
     output reg [31:0] satp_o,
 
+    output reg [63:0] mtime_o,
+    input wire [63:0] mtime_i,
     input wire [31:0] mtime0_i,
-    output reg [31:0] mtime0_o,
     input wire mtime0_we,
-
     input wire [31:0] mtime1_i,
-    output reg [31:0] mtime1_o,
     input wire mtime1_we,
 
+    output reg [63:0] mtimecmp_o,
+    input wire [63:0] mtimecmp_i,
     input wire [31:0] mtimecmp0_i,
-    output reg [31:0] mtimecmp0_o,
     input wire mtimecmp0_we,
-
     input wire [31:0] mtimecmp1_i,
-    output reg [31:0] mtimecmp1_o,
     input wire mtimecmp1_we
 );
 
@@ -70,6 +68,9 @@ module csr(
             mcause_o <= 32'h0000_0000;
             mip_o <= 32'h0000_0000;
             satp_o <= 32'h0000_0000;
+
+            mtime_o <= 64'h0000_0000_0000_0000;
+            mtimecmp_o <= 64'h0000_0000_0000_0000;
         end else begin
             if (csr_we) begin
                 case (csr_waddr)
@@ -93,9 +94,6 @@ module csr(
                     end
                     12'h342: begin
                         mcause_o <= csr_wdata;
-                    end
-                    12'h344: begin
-                        mip_o <= csr_wdata;
                     end
                 endcase
             end
@@ -132,20 +130,20 @@ module csr(
                 mip_o <= mip_i;
             end
 
-            if (mtime0_we) begin
-                mtime0_o <= mtime0_i;
+            if (mtime0_we && mtime1_we) begin
+                mtime_o <= mtime_i;
+            end else if (mtime0_we) begin
+                mtime_o[31:0] <= mtime0_i;
+            end else if (mtime1_we) begin
+                mtime_o[63:32] <= mtime1_i;
             end
 
-            if (mtime1_we) begin
-                mtime1_o <= mtime1_i;
-            end
-
-            if (mtimecmp0_we) begin
-                mtimecmp0_o <= mtimecmp0_i;
-            end
-
-            if (mtimecmp1_we) begin
-                mtimecmp1_o <= mtimecmp1_i;
+            if (mtimecmp0_we && mtimecmp1_we) begin
+                mtimecmp_o <= mtimecmp_i;
+            end else if (mtimecmp0_we) begin
+                mtimecmp_o[31:0] <= mtimecmp0_i;
+            end else if (mtimecmp1_we) begin
+                mtimecmp_o[63:32] <= mtimecmp1_i;
             end
         end
     end
